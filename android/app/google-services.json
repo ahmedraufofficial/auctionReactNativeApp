@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "902540812240",
+    "project_id": "carology-2899f",
+    "storage_bucket": "carology-2899f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:902540812240:android:571212a158ee6072c0a3d5",
+        "android_client_info": {
+          "package_name": "com.androidclient"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "902540812240-41inuaj5hs0b0oan7lf9eqhc3i8glmt8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1E0D2RL0jOErt1nYXaxqyqq1Mvd4uUs8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "902540812240-41inuaj5hs0b0oan7lf9eqhc3i8glmt8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
