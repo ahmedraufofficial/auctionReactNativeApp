@@ -16,6 +16,7 @@ import Navigation from './src/components/Navigation';
 import { AuthProvider } from './src/Context/AuthContext';
 import { gestureHandlerRootHOC } from 'react-native-gesture-handler';
 import firebase from 'react-native-firebase';
+import Toast from "react-native-toast-notifications";
 
 const App = gestureHandlerRootHOC(() => {
   
@@ -62,10 +63,14 @@ const App = gestureHandlerRootHOC(() => {
     })
   }
 
+
   return (
-    <AuthProvider deviceId={deviceId}>
-        <Navigation />
-    </AuthProvider>
+
+      <AuthProvider deviceId={deviceId}>
+          <Navigation deviceId={deviceId} />
+          <Toast ref={(ref) => global['toast'] = ref} />
+      </AuthProvider>
+
   )
 });
 

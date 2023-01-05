@@ -6,8 +6,10 @@ import { useContext } from 'react';
 import { StyleSheet } from 'react-native';
 import { Button, Card, Title, Paragraph, Text } from 'react-native-paper';
 import Theme from '../../components/Theme';
+import { ScrollView } from 'react-native';
+import CartPrice from '../../components/CartPrice';
 
-const Invoices = () => {
+const Invoices = ({navigation}) => {
     const [invoices, setInvoices] = useState([])
     const {userInfo} = useContext(AuthContext);
 
@@ -22,19 +24,25 @@ const Invoices = () => {
     }
 
     useEffect(()=>{
-        fetchInvoices();
+        let invoicesInterval = setInterval(fetchInvoices, 3000)
+
+        return () => {
+          clearInterval(invoicesInterval); 
+        }
     },[])
 
+
   return (
-    <View  style={styles.root}>
+    <ScrollView  style={styles.root}>
         {invoices.length > 0 && (
             invoices.map((invoice, index) =>    
                 <View key={"Invoice"+invoice._id+index}>
-                    <Card>
+                    <Card onPress={() => navigation.navigate('VehicleCart', {id: invoice?._id})}>
                         <View style={styles.head}> 
                             <Card.Cover style={styles.image} source={{ uri: `http://142.93.231.219/images/${invoice?.Images[0]}` }} />
                             <Card.Content style={styles.content}>
                                 <Title style={{fontSize: 15}}>{invoice?.Vehicle_Manufacturer} {invoice?.Model} {invoice?.Manufacturing_Year}</Title>
+                                <CartPrice id={invoice?._id} />
                                 <Paragraph>{invoice?.Status === "Post-Negotiation" ? "Awaiting confirmation" : invoice?.Status === "Accepted" ? "Accepted" : invoice?.Status === "Cancelled" ? "Cancelled" : null}</Paragraph>
                             </Card.Content> 
                         </View>
@@ -42,7 +50,7 @@ const Invoices = () => {
                 </View>
             ).reverse()
         )}
-    </View>
+    </ScrollView>
     )
 }
 
@@ -63,7 +71,7 @@ const styles = StyleSheet.create({
     },
     content: {
         flex:1.5,
-        width: 80, height: 80,
+        width: 80, height: 140,
     },
     shadow: {
         shadowColor: 'black',

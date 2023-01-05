@@ -20,6 +20,7 @@ import LogOut from '../../../assets/images/LogOut.png';
 import { AuthContext } from '../../Context/AuthContext';
 import mainBoard from '../../../assets/images/mainBoard.png';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Menu from '../Menu';
 
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
@@ -30,7 +31,7 @@ const styles = StyleSheet.create({
       width: null,
     },
     menuItem: {
-      padding: 20
+      padding: 15
     }
 })
 
@@ -89,6 +90,7 @@ const HomeCarousel = ({navigation}) => {
           height: null,
           }}
       >
+        <Menu navigation={navigation} />
         <Animated.View 
             style={{
               width: 200,
@@ -117,11 +119,20 @@ const HomeCarousel = ({navigation}) => {
             <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("Cart")}>
               <Text>Cart</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("Cart")}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("Profile")}>
               <Text>Profile</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("Notifications")}>
+              <Text>Notifications</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("About")}>
+              <Text>About Us</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate("Toc")}>
+              <Text>Terms and condition</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.menuItem} onPress={logout}>
-              <Text>LogOut</Text>
+              <Text>Log Out</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.menuItem, {alignSelf: 'center'}]} onPress={()=>hideMenu()}>
               <Ionicons name={'md-arrow-back-sharp'} color={Theme.colors.primary} size={25} />
@@ -133,6 +144,7 @@ const HomeCarousel = ({navigation}) => {
             Welcome {userInfo?.username}
           </Text>
           <TouchableOpacity style={{width: 150, height: 100, position: 'absolute',top: 150}} onPress={()=>showMenu()} />
+          <TouchableOpacity style={{width: 130, height: 100, position: 'absolute',top: 150, right: 0}} onPress={() => navigation.navigate("Notifications")} />
           <View style={{
               flex: 1,
               flexDirection: 'row',

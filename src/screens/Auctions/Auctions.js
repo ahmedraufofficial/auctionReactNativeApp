@@ -5,7 +5,7 @@ import CustomCard from '../../components/CustomCard/CustomCard';
 import { AuthContext } from '../../Context/AuthContext';
 import CustomNegotiationCard from '../../components/CustomNegotiationCard';
 import Theme from '../../components/Theme';
-
+import Menu from '../../components/Menu';
 const Auctions = ({navigation}) => {
   const {userInfo} = useContext(AuthContext);
 
@@ -48,6 +48,7 @@ const Auctions = ({navigation}) => {
 
   return (
     <ScrollView>
+      <Menu navigation={navigation} />
       <View>
         <Text style={styles.header}>Negotiations</Text>
       </View>
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
   },
   header: {
     fontSize: 18,
-    paddingVertical: 10,
+    paddingTop: 30,
     paddingHorizontal:20,
     color: Theme.colors.primary
   },

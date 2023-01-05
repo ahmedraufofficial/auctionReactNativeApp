@@ -116,7 +116,7 @@ const EditClassifieds = ({route, navigation}) => {
                     {"Steering Adjustment": Steering_Adjustment},
                     {"Xenon Headlights": Xenon_Headlights}
                 ]
-                const response = await fetch(`http://10.0.2.2:8080/edit/classifieds/${route.params.id}`, {
+                const response = await fetch(`http://142.93.231.219/edit/classifieds/${route.params.id}`, {
                     method: 'PUT',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({

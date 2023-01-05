@@ -17,9 +17,7 @@ const average = ['Sticker or Foil', 'Repainted', 'Average']
 const damaged = ['Dented and Painted', 'Faded', 'Scratches', 'Dents', 'Rust', 'Hailed', 'Damaged']
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
-const Vehicle = ({route, navigation}) => {
-  const [auction, setAuction] = useState(route.params.auction)
-  const [bid, setBid] = useState(null);
+const VehicleCart = ({route, navigation}) => {
   const { id } = route.params;
   const {userInfo} = useContext(AuthContext);
   const [vehicle, setVehicle] = useState(null)
@@ -33,17 +31,6 @@ const Vehicle = ({route, navigation}) => {
 
   const ref = React.useRef();
 
-  const getAuction = async () => {
-    console.log("ran after 10 secs")
-    fetch(`http://142.93.231.219/auction/${auction?._id}`)
-    .then(response => {
-      return response.json()
-    })
-    .then(data => {
-      setAuction(data.response)
-    })
-  }
-
   const fetchData = () => {
     fetch(`http://142.93.231.219/vehicle/${id}`)
     .then(response => {
@@ -56,23 +43,9 @@ const Vehicle = ({route, navigation}) => {
   }
 
   useEffect(() => {
-    let auctionInterval = setInterval(() => {
-      getAuction();
-    }, 1000);
     fetchData();
-    return () => {
-      clearInterval(auctionInterval);
-    }
-  }, [auction])
+  }, [])
   
-  const startingTime = moment(auction?.Auction_Start_Date).format("YYYY-MM-DD")+"T"+auction?.Auction_Start_Time+":00";
-  const endTime =  new Date(startingTime).getTime() + 60000 * parseInt(auction?.Total_Bidding_Duration || 10); 
-  const percentage = (((new Date().getTime())/endTime)*100)
-  const [timeLeft, setEndTime] = AuctionTimer(endTime, auction) 
-
-  const minutes = Math.floor(timeLeft / 60000) % 60;
-  const seconds = Math.floor(timeLeft / 1000) % 60;
-  const hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
 
   const colorize = (state) => {
     if (good.includes(state)) {
@@ -98,228 +71,10 @@ const Vehicle = ({route, navigation}) => {
   }
 
   return (
-    <AnimatedScrollView ref={ref} style={styles.root} stickyHeaderIndices={[4]} showsVerticalScrollIndicator={true}>
+    <AnimatedScrollView ref={ref} style={styles.root} stickyHeaderIndices={[2]} showsVerticalScrollIndicator={true}>
         <Text>Vehicle</Text>
         <CustomCarousel images={vehicle?.Images} />
-        <View style={styles.bidPanel}>
-          <View style={{width: '100%', paddingTop: 10, flexDirection: 'row', justifyContent: 'center'}}>
-            <Text style={{fontSize: Theme.fontSize.massive, color: Theme.colors.primary}}>
-              CURRENT BID 
-            </Text>
-          </View>
-          <View style={{width: '100%', paddingBottom: 10, flexDirection: 'row', justifyContent: 'center'}}>
-            {
-              auction?.Bids.length > 0 ? auction?.Bids[auction?.Bids?.length - 1].user === userInfo.username ? 
-              <Text style={[styles.priceBox,{fontSize: Theme.fontSize.massive, color: 'green'}]}>
-                {auction?.Current_Bid} {auction?.Currency}
-              </Text>
-              : 
-              <Text style={[styles.priceBox,{fontSize: Theme.fontSize.massive, color: 'red'}]}>
-                {auction?.Current_Bid} {auction?.Currency}
-              </Text>
-              : 
-              <Text style={[styles.priceBox,{fontSize: Theme.fontSize.massive}]}>
-                {auction?.Current_Bid} {auction?.Currency}
-              </Text>
-            }
 
-          </View>
-          <View style={{width: '100%', flexDirection: 'row', justifyContent: 'center'}}>
-            {auction?.Bids.length > 0 ? auction?.Bids[auction?.Bids?.length - 1].user === userInfo.username ? <Text><Ionicons name={'md-caret-up'} color={'green'} size={20} />Highest bidder</Text> : <Text><Ionicons name={'md-caret-down'} color={'red'} size={20} />You are not the highest bidder</Text> : null}
-          </View>
-        </View>
-        <View style={styles.bidPanel}>
-          <ProgressBar progress={percentage > 1 ? 1 : percentage} color={'white'} />
-          <View style={styles.timer}>
-          { auction.Status === 'Pre-Negotiation' ?
-          <> 
-            <Text><View style={styles.timeBox}><Text style={styles.timerText}>{String(hours).length > 1 ? hours: `0${hours}`}</Text></View>  <View style={styles.timeBox}><Text style={styles.timerText}>{String(minutes).length > 1 ? minutes: `0${minutes}`}</Text></View>  <View style={styles.timeBox}><Text style={styles.timerText}>{String(seconds).length > 1 ? seconds : `0${seconds}`}</Text></View></Text>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text style={{padding: 10}}>Hours</Text>
-              <Text style={{padding: 10, paddingLeft: 25}}>Minutes</Text>
-              <Text style={{padding: 10, paddingLeft: 15}}>Seconds</Text>
-            </View>
-            <View style={{width: '100%', paddingVertical: 10, flexDirection: 'row', justifyContent: 'space-between'}}> 
-            <TouchableOpacity style={styles.bidButton} onPress={() => {
-              !(auction?.Bids.length > 0) ? 
-              Alert.alert(
-                "Are your sure?",
-                `You are about to top the bid with ${auction?.Set_Incremental_Price} ${auction?.Currency}, confirm?`,
-                [
-                  {
-                    text: "Yes",
-                    onPress: () => {
-                      CustomBid( auction, setEndTime, (parseInt(auction?.Current_Bid) + parseInt(auction?.Set_Incremental_Price)), setAuction, userInfo.username, `${vehicle?.Vehicle_Manufacturer} ${vehicle?.Model} (${vehicle?.Manufacturing_Year})`);
-                      getAuction();
-                      setBid(null);
-                    },
-                  },
-                  {
-                    text: "No",
-                  },
-                ]
-              )
-              :
-              auction?.Bids[auction?.Bids?.length - 1].user === userInfo.username ? 
-              Alert.alert(
-                "Are your sure?",
-                `You are already the highest bidder. Do you still want to top the bid with ${auction?.Set_Incremental_Price} ${auction?.Currency}?`,
-                [
-                  {
-                    text: "Yes",
-                    onPress: () => {
-                      CustomBid( auction, setEndTime, (parseInt(auction?.Current_Bid) + parseInt(auction?.Set_Incremental_Price)), setAuction, userInfo.username, `${vehicle?.Vehicle_Manufacturer} ${vehicle?.Model} (${vehicle?.Manufacturing_Year})`);
-                      getAuction();
-                      setBid(null);
-                    },
-                  },
-                  {
-                    text: "No",
-                  },
-                ]
-              )
-              :
-              Alert.alert(
-                "Are your sure?",
-                `You are about to top the bid with ${auction?.Set_Incremental_Price} ${auction?.Currency}, confirm?`,
-                [
-                  {
-                    text: "Yes",
-                    onPress: () => {
-                      CustomBid( auction, setEndTime, (parseInt(auction?.Current_Bid) + parseInt(auction?.Set_Incremental_Price)), setAuction, userInfo.username, `${vehicle?.Vehicle_Manufacturer} ${vehicle?.Model} (${vehicle?.Manufacturing_Year})`);
-                      getAuction();
-                      setBid(null);
-                    },
-                  },
-                  {
-                    text: "No",
-                  },
-                ]
-              )
-            }}>
-              <Text style={{borderWidth: 1, borderColor: Theme.colors.table, borderRadius: 10, padding: 10}}>NEXT BID</Text>
-            </TouchableOpacity> 
-            <TextInput 
-                value={auction?.Set_Incremental_Price} 
-                mode='outlined'
-                keyboardType='numeric'
-                editable={false} 
-                selectTextOnFocus={false}
-                style={styles.bidText}
-              /> 
-            </View>
-            <View style={{width: '100%', paddingVertical: 10, flexDirection: 'row', justifyContent: 'space-between'}}>
-              <TouchableOpacity style={styles.bidButton} onPress={() => {
-                !(parseInt(bid) > 0) ? 
-                Alert.alert(
-                  "Re-check Bid",
-                  "Bid value is incorrect or 0",
-                  [
-                    {text: "Try Again"}
-                  ]
-                ) 
-                :
-                parseInt(bid) < parseInt(auction?.Current_Bid) ? 
-                Alert.alert(
-                  "Re-check Bid",
-                  "Bid value is less than the current bid",
-                  [
-                    {text: "Try Again"}
-                  ]
-                ) 
-                :
-                parseInt(bid) < parseInt(auction?.Current_Bid) + parseInt(auction?.Set_Incremental_Price) ? 
-                Alert.alert(
-                  "Re-check Bid",
-                  `Bid value should be greater than ${parseInt(auction?.Current_Bid || 0) + parseInt(auction?.Set_Incremental_Price) - 1}`,
-                  [
-                    {text: "Try Again"}
-                  ]
-                )
-                :
-                (parseInt(bid) % parseInt(auction?.Set_Incremental_Price)) != 0 ? 
-                Alert.alert(
-                  "Re-check Bid",
-                  `Bid value should be in multiples of ${parseInt(auction?.Set_Incremental_Price)}`,
-                  [
-                    {text: "Try Again"}
-                  ]
-                )
-                :
-                !(auction?.Bids.length > 0) ? 
-                Alert.alert(
-                  "Are your sure?",
-                  `You are about to bid ${bid} ${auction?.Currency}, confirm?`,
-                  [
-                    {
-                      text: "Yes",
-                      onPress: () => {
-                        CustomBid(auction, setEndTime, parseInt(bid), setAuction, userInfo.username, `${vehicle?.Vehicle_Manufacturer} ${vehicle?.Model} (${vehicle?.Manufacturing_Year})`);
-                        getAuction();
-                        setBid(null);
-                      },
-                    },
-                    {
-                      text: "No",
-                    },
-                  ]
-                )
-                :
-                auction?.Bids[auction?.Bids?.length - 1].user === userInfo.username ? 
-                Alert.alert(
-                  "Are your sure?",
-                  `You are already the highest bidder. Do you still want to bid ${bid} ${auction?.Currency}?`,
-                  [
-                    {
-                      text: "Yes",
-                      onPress: () => {
-                        CustomBid(auction, setEndTime, parseInt(bid), setAuction, userInfo.username, `${vehicle?.Vehicle_Manufacturer} ${vehicle?.Model} (${vehicle?.Manufacturing_Year})`);
-                        getAuction();
-                        setBid(null);
-                      },
-                    },
-                    {
-                      text: "No",
-                    },
-                  ]
-                )
-                :
-                Alert.alert(
-                  "Are your sure?",
-                  `You are about to bid ${bid} ${auction?.Currency}, confirm?`,
-                  [
-                    {
-                      text: "Yes",
-                      onPress: () => {
-                        CustomBid(auction, setEndTime, parseInt(bid), setAuction, userInfo.username, `${vehicle?.Vehicle_Manufacturer} ${vehicle?.Model} (${vehicle?.Manufacturing_Year})`);
-                        getAuction();
-                        setBid(null);
-                      },
-                    },
-                    {
-                      text: "No",
-                    },
-                  ]
-                )
-              }}>
-                <Text style={{borderWidth: 1, borderColor: Theme.colors.table, borderRadius: 10, padding: 10}}>CUSTOM BID</Text>
-              </TouchableOpacity> 
-              <TextInput 
-                value={bid} 
-                placeholder='BID'
-                placeholderTextColor={Theme.colors.primaryShadow} 
-                onChangeText={setBid}
-                mode='outlined'
-                keyboardType='numeric'
-                style={styles.bidText}
-              />
-            </View>
-          </> :
-            <Text style={styles.timerText}>Auction Completed</Text>
-          }
-          </View>
-        </View>
-          
         <View style={{marginBottom: 20, borderWidth: 2, borderColor: Theme.colors.primaryShadow}}>
           <ScrollView showsHorizontalScrollIndicator={false} horizontal={true}>
             <Button mode='contained' onPress={()=>{scrollToComponent(1)}}><Text style={{fontSize: Theme.fontSize.paragraph}}>General</Text></Button>
@@ -330,6 +85,7 @@ const Vehicle = ({route, navigation}) => {
             <Button mode='contained' onPress={()=>{scrollToComponent(6)}}><Text style={{fontSize: Theme.fontSize.paragraph}}>Technical</Text></Button>
           </ScrollView>
         </View>
+        
 
         <View onLayout={event => {setLayout1(event.nativeEvent.layout.y);}}></View>
         <CustomTable header={"General Details"} icon={"protection"} values={[
@@ -575,4 +331,4 @@ const styles = StyleSheet.create({
   })
   
 
-export default Vehicle
+export default VehicleCart

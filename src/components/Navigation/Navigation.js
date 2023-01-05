@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet } from 'react-native'
-import React, {useContext} from 'react'
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
+import React, {useContext, useState} from 'react'
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Home from '../../screens/Home';
@@ -21,9 +21,17 @@ import AddClassifieds from '../../screens/AddClassifieds';
 import EditClassifieds from '../../screens/EditClassifieds';
 import ClassifiedVehicle from '../../screens/ClassifiedVehicle';
 import Evaluation from '../../screens/Evaluation';
+import Notifications from '../../screens/Notifications';
 import ForgotPassword from '../../screens/ForgotPassword';
+import Profile from '../../screens/Profile';
+import ChangePassword from '../../screens/ChangePassword';
+import VehicleCart from '../../screens/VehicleCart';
+import About from '../../screens/About';
+import Toc from '../../screens/Toc';
 import logo from '../../../assets/images/logoName.png';
 import { Image, Dimensions } from 'react-native';
+import { useEffect } from 'react';
+import firebase from 'react-native-firebase';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -84,6 +92,37 @@ const TabNavigation = () => {
 const Navigation = () => {
     const {userInfo} = useContext(AuthContext);
     const windowWidth = Dimensions.get('window').width;
+    useEffect(()=>{
+        getToken();
+    },[])
+
+    const [deviceId, setDeviceId] = useState("")
+
+    const getToken = async() => {
+      const firebaseToken = await firebase.messaging().getToken()
+      setDeviceId(firebaseToken)
+      let notifInterval = setInterval(() => {
+        getNotif(firebaseToken);
+      }, 1000);
+      return () => {
+        clearInterval(notifInterval);
+        }
+    }
+
+    const getNotif = async (x) => {
+        fetch(`http://142.93.231.219/notifications/${x}`)
+        .then(response => {
+            return response.json()
+        })
+        .then(data => {
+            if (data.response.length > 0){
+                data.response.map((not) => {
+                    return toast.show(not.notification)
+                })
+            }
+        })
+    }
+
     return (
         <PaperProvider theme={Theme}>
             <NavigationContainer theme={Theme}>
@@ -98,6 +137,12 @@ const Navigation = () => {
                             <Stack.Screen name="ClassifiedVehicle" component={ClassifiedVehicle} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
                             <Stack.Screen name="Evaluation" component={Evaluation} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
                             <Stack.Screen name="Classifieds" component={Classifieds} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
+                            <Stack.Screen name="Notifications" component={Notifications} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
+                            <Stack.Screen name="Profile" component={Profile} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
+                            <Stack.Screen name="ChangePassword" component={ChangePassword} options={{headerShown: false}}/>
+                            <Stack.Screen name="VehicleCart" component={VehicleCart} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}}/>
+                            <Stack.Screen name="About" component={About} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}}/>
+                            <Stack.Screen name="Toc" component={Toc} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}}/>
                         </>
                     ) : (
                         <>
@@ -105,7 +150,10 @@ const Navigation = () => {
                             <Stack.Screen name="Register" component={Register} options={{headerShown: false}}/>
                             <Stack.Screen name="ForgotPassword" component={ForgotPassword} options={{headerShown: false}}/>
                             <Stack.Screen name="Classifieds" component={Classifieds} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
+                            <Stack.Screen name="Notifications" component={Notifications} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
                             <Stack.Screen name="ClassifiedVehicle" component={ClassifiedVehicle} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
+                            <Stack.Screen name="About" component={About} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}}/>
+                            <Stack.Screen name="Toc" component={Toc} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}}/>
                         </>
                     )}
                 </Stack.Navigator>

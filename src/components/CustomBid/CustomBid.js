@@ -1,9 +1,57 @@
 import moment from 'moment';
 
-async function CustomBid(auction, setEndTime, bid, setAuction, username) {
+async function CustomBid(auction, setEndTime, bid, setAuction, username, title) {
     const incrementalBid = parseInt(bid);
     const bidDetails = {user: username, type: "Auction", bid: incrementalBid.toString(), time: moment().format("HH:mm:ss"), date: moment().format("YYYY-MM-DD")}
     const newBid = auction?.Bids;
+
+    const deviceusername = await fetch(`http://142.93.231.219/deviceusername`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            username: username
+        })
+    })
+    const fbdata = await deviceusername.json()
+    if (fbdata) {
+        await fetch(`http://142.93.231.219/p2p`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                title: `You are now the highest bidder for ${title}`,
+                text: 'Highest Bidder',
+                id: fbdata.deviceId
+            })
+        })
+    } else {
+        console.log("Something went wrong")
+    }
+    if (newBid && newBid.length > 0) {
+        var lastBidder = newBid[newBid.length - 1].user
+        const deviceusername2 = await fetch(`http://142.93.231.219/deviceusername`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                username: lastBidder
+            })
+        })
+        const fbdata2 = await deviceusername2.json()
+        console.log(fbdata2)
+        if (fbdata2) {
+            await fetch(`http://142.93.231.219/p2p`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    title: `You have been outbidded for ${title}`,
+                    text: 'Highest Bidder',
+                    id: fbdata2.deviceId
+                })
+            })
+        } else {
+            console.log("Something went wrong")
+        }
+    }
+
     newBid.push(bidDetails)
     const response = await fetch(`http://142.93.231.219/edit/auction/${auction._id}`, {
                                     method: 'PUT',

@@ -3,10 +3,13 @@ import React from 'react'
 import { Avatar, Button, Card, Title, Paragraph } from 'react-native-paper';
 
 const CustomClassified = ({data, navigation, edit}) => {
+
   return (
     <Card style={{ width: 170, margin: 10 }}>
         <Card.Title title={data?.Vehicle_Manufacturer} subtitle={data?.Model + " " + data?.Year} />
-        <Card.Cover style={{marginHorizontal: 10}} source={{ uri: "http://142.93.231.219/images/"+data?.Images[0] }} />
+        {
+          data?.Images == null ? <></> : <Card.Cover style={{marginHorizontal: 10}} source={{ uri: "http://142.93.231.219/images/"+ data?.Images[0]  }} />
+        }
         <Card.Content>
           <Title>{data?.Price} AED</Title>
           <Paragraph>{data?.Kilometers} Km</Paragraph>
