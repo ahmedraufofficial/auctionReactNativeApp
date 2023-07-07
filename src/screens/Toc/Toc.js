@@ -10,7 +10,7 @@ const Toc = ({navigation}) => {
   const {userInfo, logout, isLoading} = useContext(AuthContext);
   const [about, setAbout] = useState(null)
   const fetchAbout = () => {
-    fetch(`http://142.93.231.219/toc`)
+    fetch(`https://backend.carologyauctions.net/toc`)
       .then(response => {
         return response.json()
       })

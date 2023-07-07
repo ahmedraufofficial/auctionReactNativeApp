@@ -1,4 +1,18 @@
 {
   "name": "androidClient",
-  "displayName": "androidClient"
+  "extra": {
+    "eas": {
+      "projectId": "0603c727-7edb-49ba-a610-fec06d820143"
+    }
+  },
+  "ios": {
+    "supportsTablet": true,
+    "bundleIdentifier": "com.carology.carologyios",
+    "infoPlist": {
+      "UIBackgroundModes": ["remote-notification"],
+      "NSAllowsArbitraryLoads": true,
+      "NSAllowsArbitraryLoadsForMedia": true,
+      "NSAllowsLocalNetworking": true
+    }
+  }
 }

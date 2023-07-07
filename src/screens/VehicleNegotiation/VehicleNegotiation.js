@@ -16,6 +16,16 @@ const average = ['Sticker or Foil', 'Repainted', 'Average']
 const damaged = ['Dented and Painted', 'Faded', 'Scratches', 'Dents', 'Rust', 'Hailed', 'Damaged']
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
+const calcTimeLeft = t => {
+  if (!t) return 0;
+
+  const left = t - new Date().getTime();
+  if (left < 0) return 0;
+
+  return left;
+};
+
+
 const VehicleNegotiation = ({route, navigation}) => {
   const [negotiation, setNegotiation] = useState(route.params.negotiation)
   const [bid, setBid] = useState(null);
@@ -30,10 +40,17 @@ const VehicleNegotiation = ({route, navigation}) => {
   const [layout5, setLayout5] = useState(null)
   const [layout6, setLayout6] = useState(null)
 
+  const [end, setEndTime] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(() => calcTimeLeft(end));
+
+  const [minutes, setMinutes] = useState(0);
+  const [seconds, setSeconds] = useState(0);
+  const [hours, setHours] = useState(0);
+
   const ref = React.useRef();
 
   const fetchData = () => {
-    fetch(`http://142.93.231.219/vehicle/${id}`)
+    fetch(`https://backend.carologyauctions.net/vehicle/${id}`)
     .then(response => {
       return response.json()
     })
@@ -43,13 +60,34 @@ const VehicleNegotiation = ({route, navigation}) => {
     })
   }
 
+  useEffect(() => {
+    setTimeLeft(calcTimeLeft(end));
+    const timer = setInterval(() => {
+      const targetLeft = calcTimeLeft(end);
+      setTimeLeft(targetLeft);
+      setMinutes(Math.floor(targetLeft / 60000) % 60);
+        setSeconds(Math.floor(targetLeft / 1000) % 60);
+        setHours(Math.floor((targetLeft / (1000 * 60 * 60)) % 24));
+      if (targetLeft === 0) {
+        //fetchNegotiations();
+        clearInterval(timer);
+      }
+   
+    }, 1000);
+    
+    return () => clearInterval(timer);
+}, [end])
+
   const getNegotiation = async () => {
-    fetch(`http://142.93.231.219/negotiation/${negotiation?._id}`)
+    fetch(`https://backend.carologyauctions.net/negotiation/${negotiation?._id}`)
     .then(response => {
       return response.json()
     })
     .then(data => {
       setNegotiation(data.response)
+      const startingTime = moment(data.response?.Negotiation_Start_Date).format("YYYY-MM-DDTHH:mm:ss");
+      const endTime = new Date(startingTime).getTime() + 60000 * parseInt(data.response?.Negotiation_Duration || 10);
+      setEndTime(endTime)
     })
   }
 
@@ -63,13 +101,13 @@ const VehicleNegotiation = ({route, navigation}) => {
     }
   }, [negotiation])
   
-  const startingTime = moment(negotiation?.Negotiation_Start_Date).format("YYYY-MM-DDTHH:mm:ss");
+  /* const startingTime = moment(negotiation?.Negotiation_Start_Date).format("YYYY-MM-DDTHH:mm:ss");
   const endTime = new Date(startingTime).getTime() + 60000 * parseInt(negotiation?.Negotiation_Duration || 10); 
   const [timeLeft, setEndTime] = NegotiationTimer(endTime);
 
   const minutes = negotiation?.Buy_Now_Price ? Math.floor(timeLeft / 60000) % 60 : "-";
   const seconds = negotiation?.Buy_Now_Price ? Math.floor(timeLeft / 1000) % 60 : "-";
-  const hours = negotiation?.Buy_Now_Price ? Math.floor((timeLeft / (1000 * 60 * 60)) % 24) : "-";
+  const hours = negotiation?.Buy_Now_Price ? Math.floor((timeLeft / (1000 * 60 * 60)) % 24) : "-"; */
 
   const colorize = (state) => {
     if (good.includes(state)) {
@@ -87,7 +125,7 @@ const VehicleNegotiation = ({route, navigation}) => {
     const bidDetails = {user: username, type: "Negotiation", bid: incrementalBid.toString(), time: moment().format("HH:mm:ss"), date: moment().format("YYYY-MM-DD")}
     const newBid = negotiation?.Bids;
     newBid.push(bidDetails)
-    const response = await fetch(`http://142.93.231.219/edit/negotiation/${negotiation._id}`, {
+    const response = await fetch(`https://backend.carologyauctions.net/edit/negotiation/${negotiation._id}`, {
                                     method: 'PUT',
                                     headers: {'Content-Type': 'application/json'},
                                     body: JSON.stringify({
@@ -107,7 +145,7 @@ const VehicleNegotiation = ({route, navigation}) => {
     const bidDetails = {user: username, type: "Negotiation", bid: negotiation?.Buy_Now_Price, time: moment().format("HH:mm:ss"), date: moment().format("YYYY-MM-DD")}
     const newBid = negotiation?.Bids;
     newBid.push(bidDetails)
-    const response = await fetch(`http://142.93.231.219/edit/negotiation/${negotiation._id}`, {
+    const response = await fetch(`https://backend.carologyauctions.net/edit/negotiation/${negotiation._id}`, {
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -117,7 +155,7 @@ const VehicleNegotiation = ({route, navigation}) => {
     });
     const data = await response.json();
 
-  const VehicleResponse = await fetch(`http://142.93.231.219/edit/vehicle/${id}`, {
+  const VehicleResponse = await fetch(`https://backend.carologyauctions.net/edit/vehicle/${id}`, {
       method: 'PUT',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -197,7 +235,7 @@ const VehicleNegotiation = ({route, navigation}) => {
                 </View>
                 <View style={{width: '100%', paddingVertical: 10, flexDirection: 'row', justifyContent: 'space-between'}}>
                   <TouchableOpacity style={styles.bidButton} onPress={() => {
-                    negotiation?.Buy_Now_Price === undefined || !(parseInt(bid) > 0) ? 
+                    negotiation?.Buy_Now_Price === undefined /* || !(parseInt(bid) > 0) */ ? 
                     Alert.alert(
                       "Re-check Bid",
                       "Bid value is incorrect, 0 or negotiation hasn't started",
@@ -217,7 +255,7 @@ const VehicleNegotiation = ({route, navigation}) => {
                     :
                     Alert.alert(
                       "Are your sure?",
-                      `You will be bidding ${bid} ${negotiation?.Currency} once clicked 'Yes'`,
+                      `You will be bidding ${negotiation?.Set_Incremental_Price} ${negotiation?.Currency} once clicked 'Yes'`,
                       [
                         {
                           text: "Yes",

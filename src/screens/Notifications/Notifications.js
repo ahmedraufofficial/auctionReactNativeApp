@@ -9,7 +9,7 @@ const Notifications = ({route, navigation}) => {
   const [notifications, setNotification] = useState([])
 
   const getNotif = async (x) => {
-    fetch(`http://142.93.231.219/notification/all/${x}`)
+    fetch(`https://backend.carologyauctions.net/notification/all/${x}`)
     .then(response => {
         return response.json()
     })

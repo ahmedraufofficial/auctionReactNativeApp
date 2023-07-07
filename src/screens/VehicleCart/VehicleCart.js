@@ -32,7 +32,7 @@ const VehicleCart = ({route, navigation}) => {
   const ref = React.useRef();
 
   const fetchData = () => {
-    fetch(`http://142.93.231.219/vehicle/${id}`)
+    fetch(`https://backend.carologyauctions.net/vehicle/${id}`)
     .then(response => {
       return response.json()
     })

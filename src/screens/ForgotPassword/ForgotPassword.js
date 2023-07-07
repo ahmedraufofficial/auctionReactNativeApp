@@ -28,7 +28,7 @@ const ForgotPassword = ({navigation}) => {
                 <CustomButton text={'Get OTP'} onPress={async () => {
                     if (email === '') 
                     {Alert.alert("Fill in the 'Email' field")} else {
-                    const response = await fetch(`http://142.93.231.219/forgot-password`, {
+                    const response = await fetch(`https://backend.carologyauctions.net/forgot-password`, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({
@@ -55,7 +55,7 @@ const ForgotPassword = ({navigation}) => {
                     <CustomButton text={'Reset Password'} onPress={async () => {
                     if (email === '' || otp === '' || password === '') 
                     {Alert.alert("Fill in the missing fields")} else {
-                    const response = await fetch(`http://142.93.231.219/reset-password`, {
+                    const response = await fetch(`https://backend.carologyauctions.net/reset-password`, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({

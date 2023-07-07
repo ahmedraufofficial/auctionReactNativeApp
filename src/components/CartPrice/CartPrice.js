@@ -6,7 +6,7 @@ const CartPrice = ({id}) => {
     const [negotiation, setNegotiation] = useState()
 
     const getNegotiation = async () => {
-        fetch(`http://10.0.2.2:8080/negotiation/vehicle/${id}`)
+        fetch(`https://backend.carologyauctions.net/negotiation/vehicle/${id}`)
             .then(response => {
             return response.json()
             })

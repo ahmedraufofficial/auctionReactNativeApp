@@ -8,13 +8,14 @@ import { Button, Card, Title, Paragraph, Text } from 'react-native-paper';
 import Theme from '../../components/Theme';
 import { ScrollView } from 'react-native';
 import CartPrice from '../../components/CartPrice';
+import Menu from '../../components/Menu';
 
 const Invoices = ({navigation}) => {
     const [invoices, setInvoices] = useState([])
     const {userInfo} = useContext(AuthContext);
 
     const fetchInvoices = () => {
-        fetch(`http://142.93.231.219/invoices/${userInfo.username}`)
+        fetch(`https://backend.carologyauctions.net/invoices/${userInfo.username}`)
         .then(response => {
             return response.json()
         })
@@ -33,13 +34,19 @@ const Invoices = ({navigation}) => {
 
 
   return (
-    <ScrollView  style={styles.root}>
+    <ScrollView >
+        <Menu navigation={navigation} />
+        <View style={styles.root}>
+            <Text>
+            Auctions Cart        
+            </Text>
+    
         {invoices.length > 0 && (
             invoices.map((invoice, index) =>    
-                <View key={"Invoice"+invoice._id+index}>
+                <View style={{marginTop: 10}} key={"Invoice"+invoice._id+index}>
                     <Card onPress={() => navigation.navigate('VehicleCart', {id: invoice?._id})}>
                         <View style={styles.head}> 
-                            <Card.Cover style={styles.image} source={{ uri: `http://142.93.231.219/images/${invoice?.Images[0]}` }} />
+                            <Card.Cover style={styles.image} source={{ uri: `https://backend.carologyauctions.net/images/${invoice?.Images[0]}` }} />
                             <Card.Content style={styles.content}>
                                 <Title style={{fontSize: 15}}>{invoice?.Vehicle_Manufacturer} {invoice?.Model} {invoice?.Manufacturing_Year}</Title>
                                 <CartPrice id={invoice?._id} />
@@ -50,6 +57,8 @@ const Invoices = ({navigation}) => {
                 </View>
             ).reverse()
         )}
+            </View>
+        
     </ScrollView>
     )
 }
@@ -71,7 +80,7 @@ const styles = StyleSheet.create({
     },
     content: {
         flex:1.5,
-        width: 80, height: 140,
+        width: 80, height: 'auto',
     },
     shadow: {
         shadowColor: 'black',
@@ -85,6 +94,7 @@ const styles = StyleSheet.create({
     },
     root: {    
         padding: 20,
+        paddingTop: 30
     },
 });
 

@@ -23,7 +23,7 @@ const Register = ({navigation}) => {
             <CustomInput placeholder='Confirm Password' value={confirmPassword} setValue={setConfirmPassword} secureTextEntry={true} />
             <CustomInput placeholder='Username' value={username} setValue={setUsername} />
             <CustomInput placeholder='Number' value={number} setValue={setNumber} />
-            <CustomButton text={'Sign In'} onPress={() => {
+            <CustomButton text={'Register'} onPress={() => {
                 !(password === confirmPassword) ? 
                 Alert.alert(
                     "Passwords don't match",
@@ -41,8 +41,9 @@ const Register = ({navigation}) => {
                     {text: "Try Again"}
                     ]
                 ) 
-                : 
-                register(email, password, number, username);     
+                : (
+                register(email, password, number, username), 
+                navigation.navigate('SignIn'))
             }} />
             <View style={{flexDirection: 'row', marginTop: 20}}>
                     <Text style={{color: Theme.colors.secondary}}>Already have an account? </Text>

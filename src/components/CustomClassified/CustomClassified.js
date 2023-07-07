@@ -8,7 +8,7 @@ const CustomClassified = ({data, navigation, edit}) => {
     <Card style={{ width: 170, margin: 10 }}>
         <Card.Title title={data?.Vehicle_Manufacturer} subtitle={data?.Model + " " + data?.Year} />
         {
-          data?.Images == null ? <></> : <Card.Cover style={{marginHorizontal: 10}} source={{ uri: "http://142.93.231.219/images/"+ data?.Images[0]  }} />
+          data?.Images == null ? <></> : <Card.Cover style={{marginHorizontal: 10}} source={{ uri: "https://backend.carologyauctions.net/images/"+ data?.Images[0]  }} />
         }
         <Card.Content>
           <Title>{data?.Price} AED</Title>

@@ -14,18 +14,59 @@ import { useContext } from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 //const LeftContent = props => <Avatar.Icon {...props} icon="folder" />
+
+
+const calcTimeLeft = t => {
+  if (!t) return 0;
+
+  const left = t - new Date().getTime();
+  if (left < 0) return 0;
+
+  return left;
+};
+
+
 const CustomCard = ({data, navigation}) => {
     const {userInfo} = useContext(AuthContext);
     const [auction, setAuction] = useState(data)
     const [bid, setBid] = useState(null);
 
+    const [end, setEndTime] = useState(0);
+    const [timeLeft, setTimeLeft] = useState(() => calcTimeLeft(end));
+
+    const [minutes, setMinutes] = useState(0);
+    const [seconds, setSeconds] = useState(0);
+    const [hours, setHours] = useState(0);
+
+    useEffect(() => {
+        setTimeLeft(calcTimeLeft(end));
+        console.log("Here")
+        const timer = setInterval(() => {
+          const targetLeft = calcTimeLeft(end);
+          setTimeLeft(targetLeft);
+          setMinutes(Math.floor(targetLeft / 60000) % 60);
+            setSeconds(Math.floor(targetLeft / 1000) % 60);
+            setHours(Math.floor((targetLeft / (1000 * 60 * 60)) % 24));
+          if (targetLeft === 0) {
+            //fetchNegotiations();
+            clearInterval(timer);
+          }
+       
+        }, 1000);
+        
+        return () => clearInterval(timer);
+    }, [end])
+
     const getAuction = async () => {
-        fetch(`http://142.93.231.219/auction/${auction?._id}`)
+        fetch(`https://backend.carologyauctions.net/auction/${auction?._id}`)
         .then(response => {
             return response.json()
         })
         .then(data => {
             setAuction(data.response)
+            const startingTime = moment(data.response?.Auction_Start_Date).format("YYYY-MM-DD")+"T"+data.response?.Auction_Start_Time+":00"
+            const endTime = new Date(startingTime).getTime() + 60000 * parseInt(data.response.Total_Bidding_Duration || 10); 
+            setEndTime(endTime)
         })
     }
 
@@ -36,13 +77,15 @@ const CustomCard = ({data, navigation}) => {
         }
     }, [auction]);
 
-    const startingTime = moment(auction?.Auction_Start_Date).format("YYYY-MM-DD")+"T"+auction?.Auction_Start_Time+":00"
-    const endTime = new Date(startingTime).getTime() + 60000 * parseInt(auction.Total_Bidding_Duration || 10); 
-    const [timeLeft, setEndTime] = AuctionTimer(endTime, auction);
+    /* const startingTime = moment(auction?.Auction_Start_Date).format("YYYY-MM-DD")+"T"+auction?.Auction_Start_Time+":00"
+    const endTime = new Date(startingTime).getTime() + 60000 * parseInt(auction.Total_Bidding_Duration || 10);  */
+    //const [timeLeft, newEndTime] = AuctionTimer(endTime, auction);
 
-    const minutes = Math.floor(timeLeft / 60000) % 60;
+    /* const minutes = Math.floor(timeLeft / 60000) % 60;
     const seconds = Math.floor(timeLeft / 1000) % 60;
-    const hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
+    const hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24); */
+
+
 
     const leftSwipeAuction = () => {
         return (
@@ -104,7 +147,7 @@ const CustomCard = ({data, navigation}) => {
                     {
                       text: "Yes",
                       onPress: () => {
-                        CustomBid( auction, setEndTime, parseInt(bid), setAuction, userInfo.username);
+                        CustomBid( auction, newEndTime, parseInt(bid), setAuction, userInfo.username);
                         setBid(null);
                         getAuction();
                       },
@@ -123,7 +166,7 @@ const CustomCard = ({data, navigation}) => {
                     {
                       text: "Yes",
                       onPress: () => {
-                        CustomBid(auction, setEndTime, parseInt(bid), setAuction, userInfo.username);
+                        CustomBid(auction, newEndTime, parseInt(bid), setAuction, userInfo.username);
                         setBid(null);
                         getAuction();
                       },
@@ -141,7 +184,7 @@ const CustomCard = ({data, navigation}) => {
                     {
                       text: "Yes",
                       onPress: () => {
-                        CustomBid(auction, setEndTime, parseInt(bid), setAuction, userInfo.username);
+                        CustomBid(auction, newEndTime, parseInt(bid), setAuction, userInfo.username);
                         setBid(null);
                         getAuction();
                       },
@@ -155,7 +198,7 @@ const CustomCard = ({data, navigation}) => {
                 <Text style={{borderWidth: 1, borderColor: Theme.colors.table, borderRadius: 10, padding: 10}}>BID</Text>
               </Button> 
 {/*                     <Button style={{ borderColor: Theme.colors.primary, borderWidth: 1 }} onPress={() => {
-                        CustomBid( auction, setEndTime, parseInt(bid), setAuction, userInfo.username);
+                        CustomBid( auction, newEndTime, parseInt(bid), setAuction, userInfo.username);
                     }}>Bid</Button> */}
                 </View>
             </View>
@@ -179,7 +222,7 @@ const CustomCard = ({data, navigation}) => {
                 <View style={styles.head}> 
                     { auction?.Bids.length > 0 ? auction?.Bids[auction?.Bids?.length - 1].user === userInfo.username ? <Text style={styles.bidder}><Ionicons name={'md-caret-up'} color={'green'} size={15} />Bid</Text> : <Text style={styles.bidder}><Ionicons name={'md-caret-down'} color={'red'} size={15} />Bid</Text> : null}
                     { auction.Status === 'Pre-Negotiation' ? <Text style={styles.status}><Ionicons name={'md-ellipse'} color={'green'} size={10} />Active</Text> : <Text style={styles.status}><Ionicons name={'md-ellipse'} color={'red'} size={10} />Completed</Text> }
-                    <Card.Cover style={styles.image} source={{ uri: `http://142.93.231.219/images/${auction?.Images[0]}` }} />
+                    <Card.Cover style={styles.image} source={{ uri: `https://backend.carologyauctions.net/images/${auction?.Images[0]}` }} />
                     { auction.Auction_Type === 'Reserved' ? <Text style={{position: 'absolute', fontSize: Theme.fontSize.text, left: 10, top: 10, color: 'white', backgroundColor: 'red', paddingHorizontal: 5, }}>Reserve</Text> : <Text style={{position: 'absolute', fontSize: Theme.fontSize.text, left: 10, top: 10, color: 'white', backgroundColor: 'green', paddingHorizontal: 5, }}>No-Reserve</Text>}
                     <Card.Content style={styles.content}>
                         <Title numberOfLines={1} style={{fontSize: Theme.fontSize.title, marginTop: 10,}}>{auction?.Vehicle_Title}</Title>
@@ -258,6 +301,6 @@ const styles = StyleSheet.create({
     },
 });
 
-//http://142.93.231.219/images/1654809032256-IMG-20220609-WA0006.jpg
+//https://backend.carologyauctions.net/images/1654809032256-IMG-20220609-WA0006.jpg
 
 export default CustomCard

@@ -10,7 +10,7 @@ export const AuthProvider = ({children, deviceId}) => {
 
     const register = (email, password, number, username) => {
         setIsLoading(true);
-        fetch('http://142.93.231.219/register', {
+        fetch('https://backend.carologyauctions.net/register', {
             method: "POST",
             body: JSON.stringify({
               email,
@@ -30,12 +30,12 @@ export const AuthProvider = ({children, deviceId}) => {
     };
 
     const login = (email, password) => {
-        fetch('http://142.93.231.219/login', {
+        fetch('https://backend.carologyauctions.net/login', {
             method: "POST",
             body: JSON.stringify({
                 email: email,
                 password: password,
-                deviceId: deviceId,
+                deviceId: "",
             }),
             headers: {
                 "Content-type": "application/json; charset=UTF-8"
@@ -43,6 +43,7 @@ export const AuthProvider = ({children, deviceId}) => {
             })
             .then(response => response.json())
             .then(json => {
+                console.log(json)
             if(json.token) {
                /*  if(json?.data?.status === 'Inactive') {
                     Alert.alert(

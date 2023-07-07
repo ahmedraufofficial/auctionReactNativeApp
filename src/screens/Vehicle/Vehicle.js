@@ -17,6 +17,18 @@ const average = ['Sticker or Foil', 'Repainted', 'Average']
 const damaged = ['Dented and Painted', 'Faded', 'Scratches', 'Dents', 'Rust', 'Hailed', 'Damaged']
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 
+const calcTimeLeft = t => {
+  if (!t) return 0;
+
+  const left = t - new Date().getTime();
+  if (left < 0) return 0;
+
+  return left;
+};
+
+
+
+
 const Vehicle = ({route, navigation}) => {
   const [auction, setAuction] = useState(route.params.auction)
   const [bid, setBid] = useState(null);
@@ -33,19 +45,51 @@ const Vehicle = ({route, navigation}) => {
 
   const ref = React.useRef();
 
+  const [end, setEndTime] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(() => calcTimeLeft(end));
+
+  const [minutes, setMinutes] = useState(0);
+  const [seconds, setSeconds] = useState(0);
+  const [hours, setHours] = useState(0);
+  const [percentage, setPercentage] = useState(0);
+
+  useEffect(() => {
+    setTimeLeft(calcTimeLeft(end));
+    console.log("Here")
+    const timer = setInterval(() => {
+      const targetLeft = calcTimeLeft(end);
+      setTimeLeft(targetLeft);
+      setMinutes(Math.floor(targetLeft / 60000) % 60);
+        setSeconds(Math.floor(targetLeft / 1000) % 60);
+        setHours(Math.floor((targetLeft / (1000 * 60 * 60)) % 24));
+      if (targetLeft === 0) {
+        //fetchNegotiations();
+        clearInterval(timer);
+      }
+   
+    }, 1000);
+      
+      return () => clearInterval(timer);
+  }, [end])
+
+
   const getAuction = async () => {
     console.log("ran after 10 secs")
-    fetch(`http://142.93.231.219/auction/${auction?._id}`)
+    fetch(`https://backend.carologyauctions.net/auction/${auction?._id}`)
     .then(response => {
       return response.json()
     })
     .then(data => {
       setAuction(data.response)
+      const startingTime = moment(data.response?.Auction_Start_Date).format("YYYY-MM-DD")+"T"+data.response?.Auction_Start_Time+":00"
+      const endTime = new Date(startingTime).getTime() + 60000 * parseInt(data.response.Total_Bidding_Duration || 10); 
+      setEndTime(endTime)
+      setPercentage((new Date(startingTime).getTime()/endTime)*100)
     })
   }
 
   const fetchData = () => {
-    fetch(`http://142.93.231.219/vehicle/${id}`)
+    fetch(`https://backend.carologyauctions.net/vehicle/${id}`)
     .then(response => {
       return response.json()
     })
@@ -65,14 +109,14 @@ const Vehicle = ({route, navigation}) => {
     }
   }, [auction])
   
-  const startingTime = moment(auction?.Auction_Start_Date).format("YYYY-MM-DD")+"T"+auction?.Auction_Start_Time+":00";
+  /* const startingTime = moment(auction?.Auction_Start_Date).format("YYYY-MM-DD")+"T"+auction?.Auction_Start_Time+":00";
   const endTime =  new Date(startingTime).getTime() + 60000 * parseInt(auction?.Total_Bidding_Duration || 10); 
   const percentage = (((new Date().getTime())/endTime)*100)
   const [timeLeft, setEndTime] = AuctionTimer(endTime, auction) 
 
   const minutes = Math.floor(timeLeft / 60000) % 60;
   const seconds = Math.floor(timeLeft / 1000) % 60;
-  const hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
+  const hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24); */
 
   const colorize = (state) => {
     if (good.includes(state)) {

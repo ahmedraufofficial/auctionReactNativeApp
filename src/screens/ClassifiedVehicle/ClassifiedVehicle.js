@@ -15,7 +15,7 @@ const ClassifiedVehicle = ({route, navigation}) => {
     const [classified, setClassifieds] = useState()
 
     const getClassified = async () => {
-      fetch(`http://142.93.231.219/classifieds/${route.params.id}`)
+      fetch(`https://backend.carologyauctions.net/classifieds/${route.params.id}`)
       .then(response => {
         return response.json()
       })
@@ -48,6 +48,25 @@ const ClassifiedVehicle = ({route, navigation}) => {
                     </Text>
                    </View>
                    </View> :
+                   x === 'Features' ? (
+                    <>
+                    <DataTable.Row key={index+x}>
+                      <DataTable.Cell>Features</DataTable.Cell>  
+                      </DataTable.Row>
+                    {
+                      classified[x].length > 0 &&
+                      classified[x].filter(obj => Object.values(obj)[0] === true)
+                      .map(obj => {
+                        return(<DataTable.Row>
+                          <DataTable.Cell style={{ right: 0 }}>
+                           - {String(Object.keys(obj)[0])}
+                          </DataTable.Cell>
+                          </DataTable.Row>)
+                      })
+                    }
+                     </>
+                    
+                    ) :
                    (
                     <DataTable.Row key={index+x}>
                         <DataTable.Cell>{x.replace("_", " ")}</DataTable.Cell>

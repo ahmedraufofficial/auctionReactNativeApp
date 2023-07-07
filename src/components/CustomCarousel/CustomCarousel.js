@@ -18,9 +18,9 @@ const CustomCarousel = ({images}) => {
         marginRight: 15,
         }}
         >
-          <Image source={{uri: `http://142.93.231.219/images/${item}`}} style={{width: "100%", height: "100%", position: "relative"}}/>
+          <Image source={{uri: `https://backend.carologyauctions.net/images/${item}`}} style={{width: "100%", height: "100%", position: "relative"}}/>
           <Image source={Logo} style={{position: 'absolute', width: 40, height: 40, right: 0}} resizeMode="contain" />
-          <Button onPress={() => (setModalVisible(true), setUrl(`http://142.93.231.219/images/${item}`))} style={{position: 'absolute'}}><Ionicons name={'expand'} color={'white'} size={40} /></Button>
+          <Button onPress={() => (setModalVisible(true), setUrl(`https://backend.carologyauctions.net/images/${item}`))} style={{position: 'absolute'}}><Ionicons name={'expand'} color={'white'} size={40} /></Button>
       </View>
     )
   }

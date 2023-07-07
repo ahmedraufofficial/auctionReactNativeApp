@@ -5,7 +5,7 @@ async function CustomBid(auction, setEndTime, bid, setAuction, username, title) 
     const bidDetails = {user: username, type: "Auction", bid: incrementalBid.toString(), time: moment().format("HH:mm:ss"), date: moment().format("YYYY-MM-DD")}
     const newBid = auction?.Bids;
 
-    const deviceusername = await fetch(`http://142.93.231.219/deviceusername`, {
+    const deviceusername = await fetch(`https://backend.carologyauctions.net/deviceusername`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -14,7 +14,7 @@ async function CustomBid(auction, setEndTime, bid, setAuction, username, title) 
     })
     const fbdata = await deviceusername.json()
     if (fbdata) {
-        await fetch(`http://142.93.231.219/p2p`, {
+        await fetch(`https://backend.carologyauctions.net/p2p`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
@@ -28,7 +28,7 @@ async function CustomBid(auction, setEndTime, bid, setAuction, username, title) 
     }
     if (newBid && newBid.length > 0) {
         var lastBidder = newBid[newBid.length - 1].user
-        const deviceusername2 = await fetch(`http://142.93.231.219/deviceusername`, {
+        const deviceusername2 = await fetch(`https://backend.carologyauctions.net/deviceusername`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
@@ -38,7 +38,7 @@ async function CustomBid(auction, setEndTime, bid, setAuction, username, title) 
         const fbdata2 = await deviceusername2.json()
         console.log(fbdata2)
         if (fbdata2) {
-            await fetch(`http://142.93.231.219/p2p`, {
+            await fetch(`https://backend.carologyauctions.net/p2p`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
@@ -53,7 +53,7 @@ async function CustomBid(auction, setEndTime, bid, setAuction, username, title) 
     }
 
     newBid.push(bidDetails)
-    const response = await fetch(`http://142.93.231.219/edit/auction/${auction._id}`, {
+    const response = await fetch(`https://backend.carologyauctions.net/edit/auction/${auction._id}`, {
                                     method: 'PUT',
                                     headers: {'Content-Type': 'application/json'},
                                     body: JSON.stringify({

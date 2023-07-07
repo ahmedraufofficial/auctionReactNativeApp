@@ -8,6 +8,8 @@ import Checkbox from './Checkbox';
 import ImagePicker from 'react-native-image-crop-picker';
 import {Text} from 'react-native-paper';
 import {Picker} from '@react-native-picker/picker';
+import SquareImageIcons from '../../components/SquareImageIcons/SquareImageIcons';
+import { useEffect } from 'react';
 
 const AddClassifieds = ({route, navigation}) => {
     const {userInfo} = useContext(AuthContext);
@@ -27,14 +29,14 @@ const AddClassifieds = ({route, navigation}) => {
     const [Steering_Adjustment, setSteering_Adjustment] = useState(false)
     const [Xenon_Headlights, setXenon_Headlights] = useState(false)   
 
-    const upload = (x) => {
+    /* const upload = (x) => {
         const formData = new FormData();
         const files = x
         for(let i=0; i < files.length; i++) {
             formData.append("files", files[i]);
         }
 
-        fetch(`http://142.93.231.219/upload_classified_images`, {
+        fetch(`https://backend.carologyauctions.net/upload_classified_images`, {
             method: 'POST',
             body: formData,
             headers: {
@@ -44,7 +46,39 @@ const AddClassifieds = ({route, navigation}) => {
             }).then((res) => res.json())
             .then(json => (setImages(json.message?.Images, Alert.alert('Succesfully uploaded'))))
             .catch((err) => ("Error occured", err));
-    }
+    } */
+
+    const [preImages, setPreImages] = useState([]);
+
+    const upload = (x) => {
+        return new Promise((resolve, reject) => {
+          const formData = new FormData();
+          const files = x;
+          for (let i = 0; i < files.length; i++) {
+            formData.append("files", files[i]);
+          }
+      
+          fetch(`https://backend.carologyauctions.net/upload_classified_images`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'multipart/form-data'
+            }
+          })
+            .then((res) => res.json())
+            .then((json) => {
+              console.log('Success');
+              resolve(json.message?.Images);
+            })
+            .catch((err) => {
+              console.error('Error occurred', err);
+              reject(err);
+            });
+        });
+      };
+    
+
     const openImagePicker = () => {
         let imageList = [];
 
@@ -53,29 +87,83 @@ const AddClassifieds = ({route, navigation}) => {
             waitAnimationEnd: false,
             includeExif: true,
             forceJpg: true,
-            compressImageQuality: 0.8,
+            compressImageQuality: 0.2,
             maxFiles: 10,
             mediaType: 'any',
-            includeBase64: true
-        }).then(response => {
+            includeBase64: true,
+            width: 300,
+            height: 400,
+            cropping: true
+        }).then(async response => {
             const images = response.map((image) =>({
                 uri: image.path,
                 type: image.mime,
                 name: image.path.split('/')[image.path.split('/').length - 1]
             }))
-            upload(images);
-        }).catch((err) => ("Error occured", err));
+            setPreImages(images)
+        })
     }
 
+    const [vehicles, setVehicles] = useState([])
+
+    const [Model_Names, setModel_Names] = useState([]);
+  
+  
+    const url = 'https://car-data.p.rapidapi.com/cars/makes';
+  
+      const options = {
+        method: 'GET',
+        headers: {
+          'X-RapidAPI-Key': 'bc0999e258mshcf4317dd12e51e3p170dc4jsn618b97c551a7',
+          'X-RapidAPI-Host': 'car-data.p.rapidapi.com'
+        }
+      };
+      
+  
+      const fetchData = () => {
+          fetch(url, options)
+          .then(res => res.json())
+          .then(json => setVehicles(json))
+          .catch(err => console.error('error:' + err));
+      }
+  
+      const getModels = async (x) => {
+          const modelsRequest = await fetch(`https://car-api2.p.rapidapi.com/api/models?make=${x}&sort=id&direction=asc&year=2020&verbose=yes`, {
+            method: 'GET',
+            headers: {
+              'X-RapidAPI-Key': 'bc0999e258mshcf4317dd12e51e3p170dc4jsn618b97c551a7',
+              'X-RapidAPI-Host': 'car-api2.p.rapidapi.com'
+            }
+          })
+          const modelsJson = await modelsRequest.json()
+          const modelsArray = modelsJson.data
+          if (x == "Nissan") {
+            modelsArray.push({name: "Patrol"})
+          }
+          setModel_Names(modelsArray.map((x) => {
+            return x.name
+          }))
+        }
+  
+  
+      function handleChange2(e) {
+          getModels(e);
+      }
+
+    useEffect(()=>{
+        fetchData();
+    },[])
+    
 
   return (
     <ScrollView style={styles.root}>
         <Formik
             initialValues={{ }}
             onSubmit={async values => {
+                const images = await upload(preImages)
                 values.Username = userInfo.username;
-                values.Added_Date = new Date().toISOString().slice(0, 10);
                 values.Images = images;
+                values.Added_Date = new Date().toISOString().slice(0, 10)
                 values.Features = [
                     {"ABS": ABS},
                     {"Air Bags": Air_Bags},
@@ -92,7 +180,7 @@ const AddClassifieds = ({route, navigation}) => {
                     {"Steering Adjustment": Steering_Adjustment},
                     {"Xenon Headlights": Xenon_Headlights}
                 ]
-                const response = await fetch(`http://142.93.231.219/add/classifieds`, {
+                const response = await fetch(`https://backend.carologyauctions.net/add/classifieds`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
@@ -126,15 +214,109 @@ const AddClassifieds = ({route, navigation}) => {
                 <Text>
                     ADD CLASSIFIEDS
                 </Text>
-                <TouchableOpacity style={{backgroundColor: Theme.colors.primary, marginTop: 10, padding: 10}} onPress={openImagePicker}>
+                {/* <TouchableOpacity style={{backgroundColor: Theme.colors.primary, marginTop: 10, padding: 10}} onPress={openImagePicker}>
                     <Text>UPLOAD IMAGE</Text>
-                </TouchableOpacity>
-                <TextInput onChangeText={handleChange('Vehicle_Manufacturer')} onBlur={handleBlur('Vehicle_Manufacturer')} value={values.Vehicle_Manufacturer} label='Vehicle Manufacturer' style={styles.inputText} />
-                <TextInput onChangeText={handleChange('Model')} onBlur={handleBlur('Model')} value={values.Model} label='Model' style={styles.inputText} />
-                <TextInput onChangeText={handleChange('Year')} onBlur={handleBlur('Year')} value={values.Year} label='Year' style={styles.inputText} />
-                <TextInput onChangeText={handleChange('Engine')} onBlur={handleBlur('Engine')} value={values.Engine} label='Engine' style={styles.inputText} />
+                </TouchableOpacity> */}
+            {      
+              <TouchableOpacity style={{backgroundColor: Theme.colors.primary, marginTop: 10, padding: 10}} onPress={openImagePicker}>
+                <Text>UPLOAD IMAGE</Text>
+              </TouchableOpacity>
+              }
+              {
+                preImages.length > 0 ? <View>
+                  <SquareImageIcons images={preImages} />
+                </View> : <></>
+              }
+
+
+                {/* <TextInput onChangeText={handleChange('Vehicle_Manufacturer')} onBlur={handleBlur('Vehicle_Manufacturer')} value={values.Vehicle_Manufacturer} label='Vehicle Manufacturer' style={styles.inputText} />
+                <TextInput onChangeText={handleChange('Model')} onBlur={handleBlur('Model')} value={values.Model} label='Model' style={styles.inputText} /> */}
+                
+                <Text style={styles.selectHeader}>Vehicle Manufacturer</Text>
+              <View style={styles.selectBox}>
+                <Picker
+                    enabled={true} 
+                    onValueChange={(itemValue) => {
+                      handleChange2(itemValue);
+                      handleChange('Vehicle_Manufacturer')(itemValue);
+                    }}
+                    selectedValue={values.Vehicle_Manufacturer}
+                    >
+                    <Picker.Item label="Manufacturer" value="0" />
+                      {vehicles.length > 0 && (
+                          vehicles.map((vehicle, index) => (
+                              <Picker.Item key={index+vehicle} label={vehicle} value={vehicle} />
+                          ))
+                      )}  
+                </Picker>
+              </View>
+
+              <Text style={styles.selectHeader}>Model</Text>
+              <View style={styles.selectBox}>
+                <Picker
+                    enabled={true} 
+                    onValueChange={(itemValue) => {
+                      handleChange('Model')(itemValue);
+                    }}
+                    selectedValue={values.Model}
+                    >
+                    <Picker.Item label="Model" value="0" />
+                      {Model_Names.length > 0 && (
+                          Model_Names.map((model, index) => (
+                              <Picker.Item key={index+model} label={model} value={model} />
+                          ))
+                      )}  
+                </Picker>
+              </View>
+
+
+              <Text style={styles.selectHeader}>Year</Text>
+              <View style={styles.selectBox}>
+                <Picker
+                  enabled={true}
+                  onValueChange={(itemValue) => {
+                    handleChange('Year')(itemValue);
+                  }}
+                  selectedValue={values.Year}
+                >
+                  <Picker.Item label="Year" value="0" />
+                  {Array.from({ length: 35 }, (_, index) => {
+                    const year = parseInt(new Date().getFullYear()) + 1 - index;
+                    return <Picker.Item key={year} label={year.toString()} value={year.toString()} />;
+                  })}
+                </Picker>
+              </View>
+
+              <Text style={styles.selectHeader}>Engine Size</Text>
+              <View style={styles.selectBox}>
+                <Picker
+                    enabled={true} 
+                    onValueChange={handleChange('Engine')}
+                    selectedValue={values.Engine}
+                    >
+                    <Picker.Item label="Litres" value="0" />
+                    <Picker.Item label="1.0L" value="1.0L" />
+                    <Picker.Item label="1.2L" value="1.2L" />
+                    <Picker.Item label="1.5L" value="1.5L" />
+                    <Picker.Item label="1.8L" value="1.8L" />
+                    <Picker.Item label="2.0L" value="2.0L" />
+                    <Picker.Item label="2.5L" value="2.5L" />
+                    <Picker.Item label="3.0L" value="3.0L" />
+                    <Picker.Item label="3.5L" value="3.5L" />
+                    <Picker.Item label="4.0L" value="4.0L" />
+                    <Picker.Item label="> 4.5L" value="> 4.5L" />
+                </Picker>
+              </View>
+
+                
+                {/* <TextInput onChangeText={handleChange('Year')} onBlur={handleBlur('Year')} value={values.Year} label='Year' style={styles.inputText} />
+                <TextInput onChangeText={handleChange('Engine')} onBlur={handleBlur('Engine')} value={values.Engine} label='Engine' style={styles.inputText} /> */}
+                
+                
                 <TextInput onChangeText={handleChange('Product_Description')} onBlur={handleBlur('Product_Description')} value={values.Product_Description} label='Product Description' style={styles.inputText} />
                 <TextInput onChangeText={handleChange('Price')} onBlur={handleBlur('Price')} value={values.Price} label='Price (AED)' style={styles.inputText} />
+                
+                <Text style={[styles.selectHeader, {marginBottom: 10}]}>Features</Text>
                 <Checkbox value={ABS} setValue={setABS} placeholder={"ABS"}/>
                 <Checkbox value={Air_Bags} setValue={setAir_Bags} placeholder={"Air Bags"}/>
                 <Checkbox value={Air_Conditions} setValue={setAir_Conditions} placeholder={"Air Conditions"}/>
@@ -160,7 +342,6 @@ const AddClassifieds = ({route, navigation}) => {
                     >
                     <Picker.Item label="Available" value="Available" />
                     <Picker.Item label="Available later" value="Available later" />
-                    <Picker.Item label="Sold" value="Sold" />
                 </Picker>
                 </View>   
                 <Text style={styles.selectHeader}>Cylinders</Text>
@@ -178,7 +359,21 @@ const AddClassifieds = ({route, navigation}) => {
                     <Picker.Item label="8+" value="8+" />
                 </Picker>
                 </View>
-                <TextInput onChangeText={handleChange('Condition')} onBlur={handleBlur('Condition')} value={values.Condition} label='Condition' style={styles.inputText} />
+                
+                <Text style={styles.selectHeader}>Condition</Text>
+              <View style={styles.selectBox}>
+                <Picker
+                    enabled={true} 
+                    onValueChange={handleChange('Condition')}
+                    selectedValue={values.Condition}
+                    >
+                    <Picker.Item label="Excellent" value="Excellent" />
+                    <Picker.Item label="Good" value="Good" />
+                    <Picker.Item label="Average" value="Average" />
+                    <Picker.Item label="Poor" value="Poor" />
+                </Picker>
+              </View>
+
                 <TextInput onChangeText={handleChange('Exterior_Color')} onBlur={handleBlur('Exterior_Color')} value={values.Exterior_Color} label='Exterior Color' style={styles.inputText} />
                 <TextInput onChangeText={handleChange('Kilometers')} onBlur={handleBlur('Kilometers')} value={values.Kilometers} label='Kilometers' style={styles.inputText} />
                 <Text style={styles.selectHeader}>Body Style</Text>
@@ -204,8 +399,38 @@ const AddClassifieds = ({route, navigation}) => {
                         <Picker.Item label="Minivan" value="Minivan" />
                     </Picker>
                 </View>
-                <TextInput onChangeText={handleChange('Transmission')} onBlur={handleBlur('Transmission')} value={values.Transmission} label='Transmission' style={styles.inputText} />   
-                <TextInput onChangeText={handleChange('Fuel_Type')} onBlur={handleBlur('Fuel_Type')} value={values.Fuel_Type} label='Fuel Type' style={styles.inputText} />
+               
+                <Text style={styles.selectHeader}>Transmission</Text>
+              <View style={styles.selectBox}>
+                <Picker
+                    enabled={true} 
+                    onValueChange={handleChange('Transmission')}
+                    selectedValue={values.Transmission}
+                    >
+                    <Picker.Item label="Automatic" value="Automatic" />
+                    <Picker.Item label="Manual" value="Manual" />
+                    <Picker.Item label="CVT" value="CVT" />
+                    <Picker.Item label="Electric" value="Electric" />
+                </Picker>
+              </View>
+
+              {/* <TextInput onChangeText={handleChange('Transmission')} onBlur={handleBlur('Transmission')} value={values.Transmission} label='Transmission' style={styles.inputText} />    */}
+
+              <Text style={styles.selectHeader}>Fuel Type</Text>
+              <View style={styles.selectBox}>
+                <Picker
+                    enabled={true} 
+                    onValueChange={handleChange('Fuel_Type')}
+                    selectedValue={values.Fuel_Type}
+                    >
+                    <Picker.Item label="Petrol" value="Petrol" />
+                    <Picker.Item label="Hybrid" value="Hybrid" />
+                    <Picker.Item label="Electric" value="Electric" />
+                    <Picker.Item label="Diesel" value="Diesel" />
+                </Picker>
+              </View>
+
+                
                 <TextInput onChangeText={handleChange('Interior_Color')} onBlur={handleBlur('Interior_Color')} value={values.Interior_Color} label='Interior Color' style={styles.inputText} />
                 <Text style={styles.selectHeader}>Specs</Text>
                 <View style={styles.selectBox}>
@@ -256,11 +481,12 @@ const styles = StyleSheet.create({
       marginVertical: 20
     },  
     selectBox: {
-        marginBottom: 10, borderColor: Theme.colors.primary, borderWidth: 1,  height: 60, padding: 0, 
-    },
+        marginBottom: 10, borderColor: Theme.colors.primary, borderWidth: 1, width: '100%', overflow: 'hidden', height: 60, flex: 1, justifyContent: 'center' 
+      },
     selectHeader: {
     marginTop: 10,
-    marginBottom: 5
+    marginBottom: 5,
+    fontSize: 16
     }
 });
 

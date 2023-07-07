@@ -11,18 +11,55 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import NegotiationTimer from '../NegotiationTimer';
 import { AuthContext } from '../../Context/AuthContext';
 
+const calcTimeLeft = t => {
+    if (!t) return 0;
+  
+    const left = t - new Date().getTime();
+    if (left < 0) return 0;
+  
+    return left;
+  };
+
 const CustomNegotiationCard = ({data, navigation}) => {
     const [negotiation, setNegotiation] = useState(data)
     const [bid, setBid] = useState(null);
     const {userInfo} = useContext(AuthContext);
 
+    const [end, setEndTime] = useState(0);
+    const [timeLeft, setTimeLeft] = useState(() => calcTimeLeft(end));
+
+    const [minutes, setMinutes] = useState(0);
+    const [seconds, setSeconds] = useState(0);
+    const [hours, setHours] = useState(0);
+
+    useEffect(() => {
+        setTimeLeft(calcTimeLeft(end));
+        const timer = setInterval(() => {
+          const targetLeft = calcTimeLeft(end);
+          setTimeLeft(targetLeft);
+          setMinutes(Math.floor(targetLeft / 60000) % 60);
+            setSeconds(Math.floor(targetLeft / 1000) % 60);
+            setHours(Math.floor((targetLeft / (1000 * 60 * 60)) % 24));
+          if (targetLeft === 0) {
+            //fetchNegotiations();
+            clearInterval(timer);
+          }
+       
+        }, 1000);
+        
+        return () => clearInterval(timer);
+    }, [end])
+
     const getNegotiation = async () => {
-        fetch(`http://142.93.231.219/negotiation/${negotiation?._id}`)
+        fetch(`https://backend.carologyauctions.net/negotiation/${negotiation?._id}`)
           .then(response => {
             return response.json()
           })
           .then(data => {
             setNegotiation(data.response)
+            const startingTime = moment(data.response?.Negotiation_Start_Date).format("YYYY-MM-DDTHH:mm:ss");
+            const endTime = new Date(startingTime).getTime() + 60000 * parseInt(data.response?.Negotiation_Duration || 10);
+            setEndTime(endTime)
           })
     }
 
@@ -38,13 +75,13 @@ const CustomNegotiationCard = ({data, navigation}) => {
         )
     }
 
-    const startingTime = moment(negotiation?.Negotiation_Start_Date).format("YYYY-MM-DDTHH:mm:ss");
+/*     const startingTime = moment(negotiation?.Negotiation_Start_Date).format("YYYY-MM-DDTHH:mm:ss");
     const endTime = new Date(startingTime).getTime() + 60000 * parseInt(negotiation?.Negotiation_Duration || 10); 
     const [timeLeft, setEndTime] = NegotiationTimer(endTime);
     
     const minutes = negotiation?.Buy_Now_Price ? Math.floor(timeLeft / 60000) % 60 : "-";
     const seconds = negotiation?.Buy_Now_Price ? Math.floor(timeLeft / 1000) % 60 : "-";
-    const hours = negotiation?.Buy_Now_Price ? Math.floor((timeLeft / (1000 * 60 * 60)) % 24) : "-";
+    const hours = negotiation?.Buy_Now_Price ? Math.floor((timeLeft / (1000 * 60 * 60)) % 24) : "-"; */
 
     return (
         <Swipeable renderRightActions={rightSwipe}>
@@ -53,7 +90,7 @@ const CustomNegotiationCard = ({data, navigation}) => {
                     <View style={styles.head}> 
                         { negotiation?.Bids.length > 0 ? negotiation?.Bids[negotiation?.Bids?.length - 1].user === userInfo.username ? <Text style={styles.bidder}><Ionicons name={'md-caret-up'} color={'green'} size={15} />Bid</Text> : <Text style={styles.bidder}><Ionicons name={'md-caret-down'} color={'red'} size={15} />Bid</Text> : null }
                         { negotiation?.Status === "Post-Negotiation" ? <Text style={styles.status}><Ionicons name={'md-ellipse'} color={'red'} size={10} />Completed</Text> : negotiation?.Buy_Now_Price ? <Text style={styles.status}><Ionicons name={'md-ellipse'} color={'green'} size={10} />Active</Text> : <Text style={styles.status}><Ionicons name={'md-ellipse'} color={'orange'} size={10} />Negotiating with owner...</Text> }
-                        <Card.Cover style={styles.image} source={{ uri: `http://142.93.231.219/images/${negotiation?.Images[0]}` }} />
+                        <Card.Cover style={styles.image} source={{ uri: `https://backend.carologyauctions.net/images/${negotiation?.Images[0]}` }} />
                         <Card.Content style={styles.content}>
                             <Title numberOfLines={1} style={{fontSize: Theme.fontSize.title, marginTop: 5}}>{negotiation?.Vehicle_Title}</Title>
                             <Paragraph style={{fontSize: Theme.fontSize.text}}>

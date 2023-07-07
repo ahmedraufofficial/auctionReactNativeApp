@@ -15,7 +15,7 @@ import { Dimensions } from 'react-native';
 import Sign from '../../../assets/images/Sign.png';
 import mainBoard from '../../../assets/images/mainBoard.png';
 
-const API_URL = 'http://142.93.231.219';
+const API_URL = 'https://backend.carologyauctions.net';
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
 const SignIn = ({navigation}) => {

@@ -90,7 +90,7 @@ const HomeCarousel = ({navigation}) => {
           height: null,
           }}
       >
-        <Menu navigation={navigation} />
+        <Menu screen={'Home'} navigation={navigation} />
         <Animated.View 
             style={{
               width: 200,

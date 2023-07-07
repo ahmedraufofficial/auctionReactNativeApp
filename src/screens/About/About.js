@@ -10,7 +10,7 @@ const About = ({navigation}) => {
   const {userInfo, logout, isLoading} = useContext(AuthContext);
   const [about, setAbout] = useState(null)
   const fetchAbout = () => {
-    fetch(`http://142.93.231.219/about`)
+    fetch(`https://backend.carologyauctions.net/about`)
       .then(response => {
         return response.json()
       })

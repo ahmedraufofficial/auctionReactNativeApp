@@ -17,9 +17,11 @@ import { AuthProvider } from './src/Context/AuthContext';
 import { gestureHandlerRootHOC } from 'react-native-gesture-handler';
 import firebase from 'react-native-firebase';
 import Toast from "react-native-toast-notifications";
+import PushNotificationIOS from '@react-native-community/push-notification-ios';
+import PushNotification from 'react-native-push-notification';
 
 const App = gestureHandlerRootHOC(() => {
-  
+  /*
   useEffect(() => {
     getToken();
     createChannel();
@@ -62,12 +64,35 @@ const App = gestureHandlerRootHOC(() => {
       }
     })
   }
+ */
+
+  useEffect(() => {
+    PushNotification.configure({
+      // Configure other options if needed
+      // ...
+
+      onRegister: function (token) {
+        console.log('Device Token:', token);
+        // Send the token to your server or use it as needed
+      },
+
+      onNotification: function (notification) {
+        // Handle incoming notifications
+        console.log('Notification:', notification);
+      },
+
+      // Other event handlers and options...
+    });
+
+    // Request permissions for receiving notifications
+    PushNotificationIOS.requestPermissions();
+  }, []);
 
 
   return (
 
-      <AuthProvider deviceId={deviceId}>
-          <Navigation deviceId={deviceId} />
+      <AuthProvider deviceId={""}>
+          <Navigation deviceId={""} />
           <Toast ref={(ref) => global['toast'] = ref} />
       </AuthProvider>
 

@@ -6,7 +6,7 @@ import { Animated } from 'react-native';
 import {useContext, useEffect, useState, useRef} from 'react';
 import { AuthContext } from '../../Context/AuthContext';
 
-const Menu = ({navigation}) => {
+const Menu = ({navigation, screen}) => {
     const translation = useRef(new Animated.Value(0)).current;
     const {userInfo, logout, isLoading} = useContext(AuthContext);
     useEffect(()=>{
@@ -43,8 +43,8 @@ const Menu = ({navigation}) => {
     })
     
   return (
-    <View>
-        <TouchableOpacity onPress={()=>showMenu()} style={{position: 'absolute', top: 0, left: 0, zIndex: 2, backgroundColor: 'white', padding: 2, borderBottomRightRadius: 10}}>
+    <View style={{zIndex: 100}}>
+        <TouchableOpacity onPress={()=>showMenu()} style={{position: 'absolute', top: screen == 'Home' ? 30 : 0, left: 0, zIndex: 2, backgroundColor: 'white', padding: 2, borderBottomRightRadius: 10, borderTopRightRadius: screen == 'Home' ? 10 : 0}}>
                 <Ionicons name={'home-outline'}  color={Theme.colors.primary} size={25} />
         </TouchableOpacity>
         <Animated.View 
@@ -54,6 +54,7 @@ const Menu = ({navigation}) => {
               transform: [{ translateX: translation}],
               position: 'absolute',
               zIndex: 100,
+              top: screen == 'Home' ? 30 : 0,
               borderBottomRightRadius: 50,
               borderRightWidth: 2,
               borderBottomWidth: 2,

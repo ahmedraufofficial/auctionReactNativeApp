@@ -66,7 +66,7 @@ const TabNavigation = () => {
                 tabBarIcon: ({color}) => screenOptions(route, color),
                 tabBarLabelStyle: {
                     fontSize: 13,
-                    bottom: 5
+                    bottom: 0
                 },
                 tabBarStyle: { 
                     position: 'absolute',
@@ -93,12 +93,12 @@ const Navigation = () => {
     const {userInfo} = useContext(AuthContext);
     const windowWidth = Dimensions.get('window').width;
     useEffect(()=>{
-        getToken();
+        //getToken();
     },[])
 
     const [deviceId, setDeviceId] = useState("")
 
-    const getToken = async() => {
+    /* const getToken = async() => {
       const firebaseToken = await firebase.messaging().getToken()
       setDeviceId(firebaseToken)
       let notifInterval = setInterval(() => {
@@ -110,7 +110,7 @@ const Navigation = () => {
     }
 
     const getNotif = async (x) => {
-        fetch(`http://142.93.231.219/notifications/${x}`)
+        fetch(`https://backend.carologyauctions.net/notifications/${x}`)
         .then(response => {
             return response.json()
         })
@@ -121,7 +121,7 @@ const Navigation = () => {
                 })
             }
         })
-    }
+    } */
 
     return (
         <PaperProvider theme={Theme}>
@@ -130,30 +130,30 @@ const Navigation = () => {
                     {userInfo?.token ? (
                         <>
                             <Stack.Screen name="Middleware" component={TabNavigation} options={{headerShown: false}}/>
-                            <Stack.Screen name="Vehicle" component={Vehicle} options={{headerShown: false}}/>
-                            <Stack.Screen name="VehicleNegotiation" component={VehicleNegotiation} options={{headerShown: false}} />
-                            <Stack.Screen name="AddClassifieds" component={AddClassifieds} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
-                            <Stack.Screen name="EditClassifieds" component={EditClassifieds} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
-                            <Stack.Screen name="ClassifiedVehicle" component={ClassifiedVehicle} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
-                            <Stack.Screen name="Evaluation" component={Evaluation} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
-                            <Stack.Screen name="Classifieds" component={Classifieds} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
-                            <Stack.Screen name="Notifications" component={Notifications} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
-                            <Stack.Screen name="Profile" component={Profile} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
+                            <Stack.Screen name="Vehicle" component={Vehicle} options={{ headerTitle: (props) => (<Text>Auction</Text>)}}/>
+                            <Stack.Screen name="VehicleNegotiation" component={VehicleNegotiation} options={{ headerTitle: (props) => (<Text>Negotiation</Text>)}} />
+                            <Stack.Screen name="AddClassifieds" component={AddClassifieds} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, bottom:2 }} source={logo}/>)}} />
+                            <Stack.Screen name="EditClassifieds" component={EditClassifieds} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, bottom:2 }} source={logo}/>)}} />
+                            <Stack.Screen name="ClassifiedVehicle" component={ClassifiedVehicle} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, bottom: 2 }} source={logo}/>)}} />
+                            <Stack.Screen name="Evaluation" component={Evaluation} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, bottom:2 }} source={logo}/>)}} />
+                            <Stack.Screen name="Classifieds" component={Classifieds} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, bottom:2 }} source={logo}/>)}} />
+                            <Stack.Screen name="Notifications" component={Notifications} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, bottom:2 }} source={logo}/>)}} />
+                            <Stack.Screen name="Profile" component={Profile} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, bottom:2 }} source={logo}/>)}} />
                             <Stack.Screen name="ChangePassword" component={ChangePassword} options={{headerShown: false}}/>
-                            <Stack.Screen name="VehicleCart" component={VehicleCart} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}}/>
-                            <Stack.Screen name="About" component={About} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}}/>
-                            <Stack.Screen name="Toc" component={Toc} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}}/>
+                            <Stack.Screen name="VehicleCart" component={VehicleCart} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, bottom:2 }} source={logo}/>)}}/>
+                            <Stack.Screen name="About" component={About} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, bottom:2 }} source={logo}/>)}}/>
+                            <Stack.Screen name="Toc" component={Toc} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, bottom:2 }} source={logo}/>)}}/>
                         </>
                     ) : (
                         <>
                             <Stack.Screen name="SignIn" component={SignIn} options={{headerShown: false}}/>
                             <Stack.Screen name="Register" component={Register} options={{headerShown: false}}/>
                             <Stack.Screen name="ForgotPassword" component={ForgotPassword} options={{headerShown: false}}/>
-                            <Stack.Screen name="Classifieds" component={Classifieds} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
-                            <Stack.Screen name="Notifications" component={Notifications} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
-                            <Stack.Screen name="ClassifiedVehicle" component={ClassifiedVehicle} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}} />
-                            <Stack.Screen name="About" component={About} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}}/>
-                            <Stack.Screen name="Toc" component={Toc} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, left: windowWidth/3 }} source={logo}/>)}}/>
+                            <Stack.Screen name="Classifieds" component={Classifieds} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, bottom:2 }} source={logo}/>)}} />
+                            <Stack.Screen name="Notifications" component={Notifications} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, bottom:2 }} source={logo}/>)}} />
+                            <Stack.Screen name="ClassifiedVehicle" component={ClassifiedVehicle} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, bottom:2 }} source={logo}/>)}} />
+                            <Stack.Screen name="About" component={About} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, bottom:2 }} source={logo}/>)}}/>
+                            <Stack.Screen name="Toc" component={Toc} options={{ headerTitle: (props) => (<Image style={{ width: 180, height: 50, bottom:2 }} source={logo}/>)}}/>
                         </>
                     )}
                 </Stack.Navigator>

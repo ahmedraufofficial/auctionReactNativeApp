@@ -13,7 +13,7 @@ const Auctions = ({navigation}) => {
   const [negotiations, setNegotiations] = useState([])
 
   const fetchNegotiations = () => {
-    fetch(`http://142.93.231.219/prenegotiations`)
+    fetch(`https://backend.carologyauctions.net/prenegotiations`)
     .then(response => {
       return response.json()
     })
@@ -28,7 +28,7 @@ const Auctions = ({navigation}) => {
   }
 
   const fetchAuctions = () => {
-    fetch(`http://142.93.231.219/auctions`)
+    fetch(`https://backend.carologyauctions.net/auctions`)
       .then(response => {
         return response.json()
       })
