@@ -12,24 +12,50 @@ const Classifieds = ({route, navigation}) => {
   const {userInfo} = useContext(AuthContext);
   const [classifieds, setClassifieds] = useState([])
   const [search, setSearch] = useState("")
-  const [priceLower, setPriceLower] = useState("0")
-  const [priceHigher, setPriceHigher] = useState("1000000")
-  const [yearHigher, setYearHigher] = useState("2100")
-  const [yearLower, setYearLower] = useState("1900")
+  const [priceLower, setPriceLower] = useState(0)
+  const [priceHigher, setPriceHigher] = useState(1000000)
+  const [yearHigher, setYearHigher] = useState(parseInt(new Date().getFullYear()) + 1)
+  const [yearLower, setYearLower] = useState(2000)
+  const [sort, setSort] = useState("0")
+
   const fetchClassifieds = () => {
     fetch(`https://backend.carologyauctions.net/classifieds`)
       .then(response => {
         return response.json()
       })
       .then(data => {
-        setClassifieds(data.data)
+        const filteredClassifieds = data.data.filter(classified => {
+          const priceInRange = parseInt(classified.Price.replace(',', '')) >= priceLower && parseInt(classified.Price.replace(',', '')) <= priceHigher;
+          const yearInRange = classified.Year >= yearLower && classified.Year <= yearHigher;
+          return priceInRange && yearInRange;
+        });
+
+        if (sort !== "0") {
+          const sortedClassifieds = filteredClassifieds.slice().sort((a, b) => {
+            if (sort === "2") {
+                return b.Price.replace(',', '') - a.Price.replace(',', '');
+            } else if (sort === "1") {
+                return a.Price.replace(',', '') - b.Price.replace(',', '');
+            }
+          }); 
+            setClassifieds(sortedClassifieds)
+        } else {
+          setClassifieds(filteredClassifieds)
+        }
       })
   }
 
   useEffect(()=>{
     fetchClassifieds();
-  }, [])
+  }, [priceHigher, priceLower, yearHigher, yearLower, sort])
 
+  const handleYearFrom = (x) => {
+    setYearLower(x)
+  }
+  
+  const handleYearTo = (x) => {
+    setYearHigher(x)
+  }
 
   
   return (
@@ -60,20 +86,34 @@ const Classifieds = ({route, navigation}) => {
           <Text style={{fontSize: Theme.fontSize.tableHeader}}>Filters</Text>
           <Button title="Reset" onPress={() => {
             setSearch("");
-            setPriceLower("0");
-            setPriceHigher("1000000");
-            setYearLower("1900");
-            setYearHigher("2100");
+            setSort("0");
+            setPriceLower(0);
+            setPriceHigher(1000000);
+            setYearLower(2000);
+            setYearHigher(parseInt(new Date().getFullYear()) + 1);
           }}>
           </Button>
         </View>
 
         <TextInput style={styles.inputText} label="Search Vehicle or Model" value={search} onChangeText={search => setSearch(search)} />
-        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+
+        <View  style={styles.selectBox}  >
+            <Picker
+                onValueChange={value => setSort(value)}
+                selectedValue={sort}
+                >
+                <Picker.Item label="Sort" value="0" />
+                <Picker.Item label="Price: low to high" value="1" />
+                <Picker.Item label="Price: high to low" value="2" />
+            </Picker>
+          </View>
+
+        
+        <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
           <View style={styles.selectBox} >
             <Picker
-                onValueChange={price => setPriceLower(price)}
-                selectedValue={priceLower}
+                onValueChange={(price) => setPriceLower(parseInt(price))}
+                selectedValue={priceLower.toString()}
                 >
                 <Picker.Item label="Price From" value="0" />
                 <Picker.Item label="10,000" value="10000" />
@@ -87,13 +127,13 @@ const Classifieds = ({route, navigation}) => {
                 <Picker.Item label="90,000" value="90000" />
                 <Picker.Item label="100,000" value="100000" />
                 <Picker.Item label="150,000" value="150000" />
-                <Picker.Item label="150,000 +" value="151,000" />
+                <Picker.Item label="150,000 +" value="151000" />
             </Picker>
           </View>
           <View style={styles.selectBox} >
             <Picker
-                onValueChange={price => setPriceHigher(price)}
-                selectedValue={priceHigher}
+                onValueChange={price => setPriceHigher(parseInt(price))}
+                selectedValue={priceHigher.toString()}
                 >
                 <Picker.Item label="Price To" value="1000000" />
                 <Picker.Item label="10,000" value="10000" />
@@ -110,62 +150,34 @@ const Classifieds = ({route, navigation}) => {
             </Picker>
           </View>
         </View>
-        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-          <View style={styles.selectBox} >
-            <Picker
-                onValueChange={year => setYearLower(year)}
-                selectedValue={yearLower}
-                >
-                   <Picker.Item label="Year From" value="1970" />
-                  {Array.from({ length: 45 }, (_, index) => {
-                    const year = parseInt(new Date().getFullYear()) + 1 - index;
-                    return <Picker.Item key={year} label={year.toString()} value={year.toString()} />;
-                  })}
-
-            </Picker>
+        <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+        <View style={styles.selectBox} >
+            <TextInput keyboardType="numeric" onChangeText={(itemValue) => {handleYearFrom(itemValue)}} value={yearLower} label='Year From' style={styles.inputText} />
           </View>
           <View style={styles.selectBox} >
-            <Picker
-                onValueChange={year => setYearHigher(year)}
-                selectedValue={yearHigher}
-                >
-
-                <Picker.Item label="Year To" value="2100" />
-                  {Array.from({ length: 45 }, (_, index) => {
-                    const year2 = parseInt(new Date().getFullYear()) + 1 - index;
-                    return <Picker.Item key={year2} label={year2.toString()} value={year2.toString()} />;
-                  })}
-
-            </Picker>
+            <TextInput keyboardType="numeric" onChangeText={(itemValue) => {handleYearTo(itemValue)}} value={yearHigher} label='Year To' style={styles.inputText} />
           </View>
         </View>
       </View>
 
-      <View style={{padding: 15}}>
+      <View style={{padding: 15, zIndex: -100}}>
           <Text style={{fontSize: Theme.fontSize.tableHeader}}>Results</Text>
       </View>
 
-      <View style={{flexDirection: 'row', flexWrap: "wrap", justifyContent: "space-around"}}>
-        { classifieds.length > 0 && (classifieds?.map((classified) => {
-          var price = parseInt(classified.Price);
-          var year = parseInt(classified.Year);
-          if (search) {
-            if (classified.Model.toLowerCase().includes(search.toLowerCase()) || classified.Vehicle_Manufacturer.toLowerCase().includes(search.toLowerCase())) {
-              if (price > parseInt(priceLower) && price < parseInt(priceHigher)) {
-                if (year > parseInt(yearLower) && year < parseInt(yearHigher) || year == parseInt(yearLower) || year == parseInt(yearHigher)) {
-                  return <CustomClassified style={{flexWrap: 'wrap'}} key={classified?._id} navigation={navigation} data={classified} edit={userInfo.username === classified.Username ? true : false } />
-                }
-              } 
-            }
-          } else {
-            if (price > parseInt(priceLower) && price < parseInt(priceHigher)) {
-              if (year > parseInt(yearLower) && year < parseInt(yearHigher) || year == parseInt(yearLower) || year == parseInt(yearHigher)) {
+      <View style={{flexDirection: 'row', flexWrap: "wrap", justifyContent: "space-around", zIndex: -100}}>
+        {
+          classifieds.length > 0 ? classifieds.map((classified) => {
+            if (search) {
+              if ((classified?.Model ? classified?.Model.toLowerCase().includes(search.toLowerCase()) : false) || classified?.Vehicle_Manufacturer.toLowerCase().includes(search.toLowerCase())) {
                 return <CustomClassified style={{flexWrap: 'wrap'}} key={classified?._id} navigation={navigation} data={classified} edit={userInfo.username === classified.Username ? true : false } />
               }
-            } 
-          }
-        }))}
-      </View>
+            } else {
+              return <CustomClassified style={{flexWrap: 'wrap'}} key={classified?._id} navigation={navigation} data={classified} edit={userInfo.username === classified.Username ? true : false } />
+            }
+          }) : null
+        }
+
+    </View>
     </ScrollView>
   )
 }

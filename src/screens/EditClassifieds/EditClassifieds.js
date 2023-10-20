@@ -28,6 +28,8 @@ const EditClassifieds = ({route, navigation}) => {
         setPreImages(res.Images)
         delete res.Images
         setClassifieds(res)
+        const isJapaneseOrKorean = data.response.Specs  === "Japanese" || data.response.Specs  === "Korean" || data.response.Specs  === "GCC";
+        isJapaneseOrKorean ? setMileage(true) : setMileage(false)
       })
     }
 
@@ -51,6 +53,7 @@ const EditClassifieds = ({route, navigation}) => {
     const [Rear_Parking_Sensor, setRear_Parking_Sensor] = useState(false)
     const [Steering_Adjustment, setSteering_Adjustment] = useState(false)
     const [Xenon_Headlights, setXenon_Headlights] = useState(false)   
+    const [mileage, setMileage] = useState(true)   
 
     /* const upload = (x) => {
         const formData = new FormData();
@@ -244,7 +247,10 @@ const EditClassifieds = ({route, navigation}) => {
               </View>
 
                 
-                <TextInput onChangeText={handleChange('Product_Description')} onBlur={handleBlur('Product_Description')} value={values.Product_Description} label='Product Description' style={styles.inputText} />
+              <TextInput autoCapitalize="sentences" onChangeText={handleChange('Product_Description')} onBlur={handleBlur('Product_Description')} value={values.Product_Description} label='Product Description' style={styles.inputText}
+                 multiline
+                 numberOfLines={7} 
+                />
                 <TextInput onChangeText={handleChange('Price')} onBlur={handleBlur('Price')} value={values.Price} label='Price (AED)' style={styles.inputText} />
                 <Text style={[styles.selectHeader, {marginBottom: 10}]}>Features</Text>
                 <Checkbox value={ABS} setValue={setABS} placeholder={"ABS"}/>
@@ -305,7 +311,6 @@ const EditClassifieds = ({route, navigation}) => {
               </View>
 
                 <TextInput onChangeText={handleChange('Exterior_Color')} onBlur={handleBlur('Exterior_Color')} value={values.Exterior_Color} label='Exterior Color' style={styles.inputText} />
-                <TextInput onChangeText={handleChange('Kilometers')} onBlur={handleBlur('Kilometers')} value={values.Kilometers} label='Kilometers' style={styles.inputText} />
                 <Text style={styles.selectHeader}>Body Style</Text>
                 <View style={styles.selectBox}>
                     <Picker
@@ -366,13 +371,48 @@ const EditClassifieds = ({route, navigation}) => {
                 <View style={styles.selectBox}>
                     <Picker
                         enabled={true} 
-                        onValueChange={handleChange('Specs')}
+                        onValueChange={(itemValue) => {
+                            handleChange('Specs')(itemValue);
+                            const isJapaneseOrKorean = itemValue === "Japanese" || itemValue === "Korean" || itemValue === "GCC";
+                            isJapaneseOrKorean ? setMileage(true) : setMileage(false)
+                          }
+                        }
                         selectedValue={values.Specs}
                         >
                         <Picker.Item label="GCC" value="GCC" />
-                        <Picker.Item label="American Specs" value="American Specs" />
+                        <Picker.Item label="American" value="American" />
+                        <Picker.Item label="European" value="European" />
+                        <Picker.Item label="Canadian" value="Canadian" />
+                        <Picker.Item label="Japanese" value="Japanese" />
+                        <Picker.Item label="Korean" value="Korean" />
                     </Picker>
                 </View>
+
+                {mileage ? <View style={styles.inputContainer}>
+                  <TextInput
+                    onChangeText={handleChange('Kilometers')}
+                    onBlur={handleBlur('Kilometers')}
+                    value={values.Kilometers}
+                    label="Kilometers"
+                    keyboardType="numeric"
+                    style={styles.inputText2}
+                  />
+                  <Text style={styles.kmLabel}>KM</Text>
+                  </View> : 
+                  <View style={styles.inputContainer}>
+                    <TextInput
+                      onChangeText={handleChange('Kilometers')}
+                      onBlur={handleBlur('Kilometers')}
+                      value={values.Kilometers}
+                      label="Miles"
+                      keyboardType="numeric"
+                      style={styles.inputText}
+                    />
+                    <Text style={styles.kmLabel}>Miles</Text>
+                  </View>
+                }
+
+
                 <Text style={styles.selectHeader}>Doors</Text>
                 <View style={styles.selectBox}>
                     <Picker
@@ -418,7 +458,27 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 5,
     fontSize: 16
-    }
+    },
+    inputContainer: {
+      flexDirection: 'row', // Display elements in a row
+      alignItems: 'center',
+      justifyContent:'space-between' // Vertically center align elements
+    },
+    kmLabel: {
+      marginLeft: 10, // Add some spacing between input and label
+      fontWeight: 'bold',
+    },
+    errorText: {
+      color: 'red',
+      fontSize: 14,
+      marginTop: 5,
+    },inputText2: {
+      borderWidth: 1, 
+      borderColor: Theme.colors.primary, 
+      color: 'white', 
+      marginVertical: 20,
+      minWidth:'80%'
+    },  
 });
 
 export default EditClassifieds

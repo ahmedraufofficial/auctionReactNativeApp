@@ -54,7 +54,7 @@ const Auctions = ({navigation}) => {
       </View>
       <View style={styles.root}>
         {
-          negotiations.length > 0 && (
+          negotiations?.length > 0 && (
             negotiations.map((negotiation) => 
               negotiation.Status !== 'Post-Negotiation' ? 
               <View style={styles.card} key={negotiation._id}>

@@ -1,7 +1,7 @@
 import React, {useContext, useState} from 'react'
 import { Button, View, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { TextInput } from 'react-native-paper';
-import { Formik } from 'formik';
+import { Formik, ErrorMessage } from 'formik';
 import Theme from '../../components/Theme';
 import { AuthContext } from '../../Context/AuthContext';
 import Checkbox from './Checkbox';
@@ -10,6 +10,7 @@ import {Text} from 'react-native-paper';
 import {Picker} from '@react-native-picker/picker';
 import SquareImageIcons from '../../components/SquareImageIcons/SquareImageIcons';
 import { useEffect } from 'react';
+import * as Yup from 'yup';
 
 const AddClassifieds = ({route, navigation}) => {
     const {userInfo} = useContext(AuthContext);
@@ -28,6 +29,9 @@ const AddClassifieds = ({route, navigation}) => {
     const [Rear_Parking_Sensor, setRear_Parking_Sensor] = useState(false)
     const [Steering_Adjustment, setSteering_Adjustment] = useState(false)
     const [Xenon_Headlights, setXenon_Headlights] = useState(false)   
+    const [mileage, setMileage] = useState(true)
+
+    const [otherModelName, setOtherModelName] = useState(false)
 
     /* const upload = (x) => {
         const formData = new FormData();
@@ -100,7 +104,11 @@ const AddClassifieds = ({route, navigation}) => {
                 type: image.mime,
                 name: image.path.split('/')[image.path.split('/').length - 1]
             }))
-            setPreImages(images)
+            if (images.length > 8) {
+              Alert.alert("Maximum 8 images are allowed")
+            } else {
+              setPreImages(images)
+            }
         })
     }
 
@@ -150,6 +158,22 @@ const AddClassifieds = ({route, navigation}) => {
           getModels(e);
       }
 
+
+      const phoneRegExp = /^(\+\d{12})$/;
+
+    const validationSchema = Yup.object().shape({
+      Seller_Contact: Yup.string().matches(phoneRegExp, 'Please enter a valid phone number in the format +971501234567').required('Seller contact is required'),
+      Seller_Name: Yup.string().required('Seller name is required'),
+      Vehicle_Manufacturer: Yup.string().test(
+        'is-valid-manufacturer',
+        'Please select a valid vehicle manufacturer',
+        value => vehicles.includes(value)
+      ),
+      Product_Description: Yup.string().required('Description is required'),
+      Price: Yup.string().required('Price is required'),
+      Kilometers: Yup.string().required('Mileage is required')
+    });
+
     useEffect(()=>{
         fetchData();
     },[])
@@ -157,14 +181,23 @@ const AddClassifieds = ({route, navigation}) => {
 
   return (
     <ScrollView style={styles.root}>
-        <Formik
-            initialValues={{ }}
+          <Formik
+              initialValues={{Vehicle_Manufacturer: "",
+              Seller_Contact: "",
+              Seller_Name: "",
+              Product_Description: "",
+              Price: "",
+              Kilometers: "",
+              Specs: ""
+            }}
+            validationSchema={validationSchema}
             onSubmit={async values => {
+                const formData = values
                 const images = await upload(preImages)
-                values.Username = userInfo.username;
-                values.Images = images;
-                values.Added_Date = new Date().toISOString().slice(0, 10)
-                values.Features = [
+                formData.Username = userInfo.username;
+                formData.Images = images;
+                formData.Added_Date = new Date().toISOString().slice(0, 10)
+                formData.Features = [
                     {"ABS": ABS},
                     {"Air Bags": Air_Bags},
                     {"Air Conditions": Air_Conditions},
@@ -180,11 +213,15 @@ const AddClassifieds = ({route, navigation}) => {
                     {"Steering Adjustment": Steering_Adjustment},
                     {"Xenon Headlights": Xenon_Headlights}
                 ]
+                if (formData.Model === "Other") {
+                  formData.Model = formData.otherModelName
+                  delete formData["otherModelName"]
+                }
                 const response = await fetch(`https://backend.carologyauctions.net/add/classifieds`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        values
+                        formData
                     })
                 })
                 const data = await response.json()
@@ -192,8 +229,8 @@ const AddClassifieds = ({route, navigation}) => {
                     if (data.status === '200')
                     {
                         Alert.alert(
-                            "Successfully Added",
-                            ' ',
+                          "Congratulations on adding your vehicle to 'Carology'! 🚗✨ Your listing is now ready to shine in our marketplace. We're excited to help you find the perfect buyer for your vehicle. Our team is dedicated to creating a smooth selling experience for you. Should you need to make any updates to your listing or have any questions along the way, don't hesitate to get in touch. Best of luck with your sale, and thank you for choosing 'Carology'!",
+                            'Would you like to view your listing?',
                             [
                               {
                                 text: "OK",
@@ -209,7 +246,7 @@ const AddClassifieds = ({route, navigation}) => {
             
             }}
         >
-            {({ handleChange, handleBlur, handleSubmit, values }) => (
+            {({ handleChange, handleBlur, handleSubmit, values, isValid, errors }) => (
             <View styles={{marginBottom: 40}}>
                 <Text>
                     ADD CLASSIFIEDS
@@ -233,6 +270,13 @@ const AddClassifieds = ({route, navigation}) => {
                 <TextInput onChangeText={handleChange('Model')} onBlur={handleBlur('Model')} value={values.Model} label='Model' style={styles.inputText} /> */}
                 
                 <Text style={styles.selectHeader}>Vehicle Manufacturer</Text>
+                <View>
+                <ErrorMessage
+                  name="Vehicle_Manufacturer"
+                  component={Text}
+                  style={styles.errorText}
+                />
+              </View>
               <View style={styles.selectBox}>
                 <Picker
                     enabled={true} 
@@ -257,6 +301,11 @@ const AddClassifieds = ({route, navigation}) => {
                     enabled={true} 
                     onValueChange={(itemValue) => {
                       handleChange('Model')(itemValue);
+                      if (itemValue === "Other") {
+                        setOtherModelName(true)
+                      } else {
+                        setOtherModelName(false)
+                      }
                     }}
                     selectedValue={values.Model}
                     >
@@ -266,8 +315,13 @@ const AddClassifieds = ({route, navigation}) => {
                               <Picker.Item key={index+model} label={model} value={model} />
                           ))
                       )}  
+                      <Picker.Item label="Other" value="Other" />
                 </Picker>
               </View>
+
+              {
+                otherModelName ? <TextInput onChangeText={handleChange('otherModelName')} onBlur={handleBlur('otherModelName')} value={values.otherModelName} label='Other Model Name' style={styles.inputText} /> : <></>
+              }
 
 
               <Text style={styles.selectHeader}>Year</Text>
@@ -287,33 +341,34 @@ const AddClassifieds = ({route, navigation}) => {
                 </Picker>
               </View>
 
-              <Text style={styles.selectHeader}>Engine Size</Text>
-              <View style={styles.selectBox}>
-                <Picker
-                    enabled={true} 
-                    onValueChange={handleChange('Engine')}
-                    selectedValue={values.Engine}
-                    >
-                    <Picker.Item label="Litres" value="0" />
-                    <Picker.Item label="1.0L" value="1.0L" />
-                    <Picker.Item label="1.2L" value="1.2L" />
-                    <Picker.Item label="1.5L" value="1.5L" />
-                    <Picker.Item label="1.8L" value="1.8L" />
-                    <Picker.Item label="2.0L" value="2.0L" />
-                    <Picker.Item label="2.5L" value="2.5L" />
-                    <Picker.Item label="3.0L" value="3.0L" />
-                    <Picker.Item label="3.5L" value="3.5L" />
-                    <Picker.Item label="4.0L" value="4.0L" />
-                    <Picker.Item label="> 4.5L" value="> 4.5L" />
-                </Picker>
-              </View>
+              <TextInput onChangeText={handleChange('Engine')} onBlur={handleBlur('Engine')} value={values.Engine} label='Engine' style={styles.inputText} />
 
                 
                 {/* <TextInput onChangeText={handleChange('Year')} onBlur={handleBlur('Year')} value={values.Year} label='Year' style={styles.inputText} />
                 <TextInput onChangeText={handleChange('Engine')} onBlur={handleBlur('Engine')} value={values.Engine} label='Engine' style={styles.inputText} /> */}
                 
                 
-                <TextInput onChangeText={handleChange('Product_Description')} onBlur={handleBlur('Product_Description')} value={values.Product_Description} label='Product Description' style={styles.inputText} />
+                <View>
+                <ErrorMessage
+                  name="Product_Description"
+                  component={Text}
+                  style={styles.errorText}
+                />
+              </View>
+               
+                <TextInput autoCapitalize="sentences" onChangeText={handleChange('Product_Description')} onBlur={handleBlur('Product_Description')} value={values.Product_Description} label='Vehicle Description' style={styles.inputText} 
+                  multiline
+                  numberOfLines={7} 
+                />
+
+              <View>
+                <ErrorMessage
+                  name="Price"
+                  component={Text}
+                  style={styles.errorText}
+                />
+              </View>
+
                 <TextInput onChangeText={handleChange('Price')} onBlur={handleBlur('Price')} value={values.Price} label='Price (AED)' style={styles.inputText} />
                 
                 <Text style={[styles.selectHeader, {marginBottom: 10}]}>Features</Text>
@@ -375,8 +430,9 @@ const AddClassifieds = ({route, navigation}) => {
               </View>
 
                 <TextInput onChangeText={handleChange('Exterior_Color')} onBlur={handleBlur('Exterior_Color')} value={values.Exterior_Color} label='Exterior Color' style={styles.inputText} />
-                <TextInput onChangeText={handleChange('Kilometers')} onBlur={handleBlur('Kilometers')} value={values.Kilometers} label='Kilometers' style={styles.inputText} />
-                <Text style={styles.selectHeader}>Body Style</Text>
+                
+                
+              <Text style={styles.selectHeader}>Body Style</Text>
                 <View style={styles.selectBox}>
                     <Picker
                         enabled={true} 
@@ -399,6 +455,61 @@ const AddClassifieds = ({route, navigation}) => {
                         <Picker.Item label="Minivan" value="Minivan" />
                     </Picker>
                 </View>
+
+                <Text style={styles.selectHeader}>Specs</Text>
+           
+           <View style={styles.selectBox}>
+               <Picker
+                   enabled={true} 
+                   onValueChange={(itemValue) => {
+                     handleChange('Specs')(itemValue);
+                     const isJapaneseOrKorean = itemValue === "Japanese" || itemValue === "Korean" || itemValue === "GCC";
+                     isJapaneseOrKorean ? setMileage(true) : setMileage(false)
+                   }
+                 }
+                   selectedValue={values.Specs}
+                   >
+                   <Picker.Item label="GCC" value="GCC" />
+                   <Picker.Item label="American" value="American" />
+                   <Picker.Item label="European" value="European" />
+                   <Picker.Item label="Canadian" value="Canadian" />
+                   <Picker.Item label="Japanese" value="Japanese" />
+                   <Picker.Item label="Korean" value="Korean" />
+               </Picker>
+           </View>
+
+
+                <View>
+                <ErrorMessage
+                  name="Kilometers"
+                  component={Text}
+                  style={styles.errorText}
+                />
+              </View>
+
+                {mileage ? <View style={styles.inputContainer}>
+                  <TextInput
+                    onChangeText={handleChange('Kilometers')}
+                    onBlur={handleBlur('Kilometers')}
+                    value={values.Kilometers}
+                    label="Kilometers"
+                    keyboardType="numeric"
+                    style={styles.inputText2}
+                  />
+                  <Text style={styles.kmLabel}>KM</Text>
+                  </View> : 
+                  <View style={styles.inputContainer}>
+                    <TextInput
+                      onChangeText={handleChange('Kilometers')}
+                      onBlur={handleBlur('Kilometers')}
+                      value={values.Kilometers}
+                      label="Miles"
+                      keyboardType="numeric"
+                      style={styles.inputText2}
+                    />
+                    <Text style={styles.kmLabel}>Miles</Text>
+                  </View>
+                }
                
                 <Text style={styles.selectHeader}>Transmission</Text>
               <View style={styles.selectBox}>
@@ -432,17 +543,7 @@ const AddClassifieds = ({route, navigation}) => {
 
                 
                 <TextInput onChangeText={handleChange('Interior_Color')} onBlur={handleBlur('Interior_Color')} value={values.Interior_Color} label='Interior Color' style={styles.inputText} />
-                <Text style={styles.selectHeader}>Specs</Text>
-                <View style={styles.selectBox}>
-                    <Picker
-                        enabled={true} 
-                        onValueChange={handleChange('Specs')}
-                        selectedValue={values.Specs}
-                        >
-                        <Picker.Item label="GCC" value="GCC" />
-                        <Picker.Item label="American Specs" value="American Specs" />
-                    </Picker>
-                </View>
+                
                 <Text style={styles.selectHeader}>Doors</Text>
                 <View style={styles.selectBox}>
                     <Picker
@@ -456,8 +557,25 @@ const AddClassifieds = ({route, navigation}) => {
                         <Picker.Item label="Other" value="Other" />
                     </Picker>
                 </View>
+                
+                <View>
+                <ErrorMessage
+                  name="Seller_Name"
+                  component={Text}
+                  style={styles.errorText}
+                />
+              </View>
                 <TextInput onChangeText={handleChange('Seller_Name')} onBlur={handleBlur('Seller_Name')} value={values.Seller_Name} label='Seller Name' style={styles.inputText} />
-                <TextInput onChangeText={handleChange('Seller_Contact')} onBlur={handleBlur('Seller_Contact')} value={values.Seller_Contact} label='Seller Contact' style={styles.inputText} />
+                <View>
+                <ErrorMessage
+                  name="Seller_Contact"
+                  component={Text}
+                  style={styles.errorText}
+                />
+              </View>
+                <TextInput keyboardType="phone-pad" onChangeText={handleChange('Seller_Contact')} onBlur={handleBlur('Seller_Contact')} value={values.Seller_Contact} label='Seller Contact' style={styles.inputText} />
+             
+
                 <Button onPress={handleSubmit} title="Submit" />
                 <View style={{height: 50}}>
 
@@ -480,6 +598,13 @@ const styles = StyleSheet.create({
       color: 'white', 
       marginVertical: 20
     },  
+    inputText2: {
+      borderWidth: 1, 
+      borderColor: Theme.colors.primary, 
+      color: 'white', 
+      marginVertical: 20,
+      minWidth:'80%'
+    },  
     selectBox: {
         marginBottom: 10, borderColor: Theme.colors.primary, borderWidth: 1, width: '100%', overflow: 'hidden', height: 60, flex: 1, justifyContent: 'center' 
       },
@@ -488,6 +613,21 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     fontSize: 16
     }
+    ,
+    inputContainer: {
+      flexDirection: 'row', // Display elements in a row
+      alignItems: 'center',
+      justifyContent:'space-between' // Vertically center align elements
+    },
+    kmLabel: {
+      marginLeft: 10, // Add some spacing between input and label
+      fontWeight: 'bold',
+    },
+    errorText: {
+      color: 'red',
+      fontSize: 14,
+      marginTop: 5,
+    },
 });
 
 export default AddClassifieds

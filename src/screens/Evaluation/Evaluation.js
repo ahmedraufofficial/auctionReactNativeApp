@@ -47,7 +47,7 @@ const Evaluation = ({route, navigation}) => {
   const [vehicles, setVehicles] = useState([])
 
   const [Model_Names, setModel_Names] = useState([]);
-
+  const [otherModelName, setOtherModelName] = useState(false)
 
   const url = 'https://car-data.p.rapidapi.com/cars/makes';
 
@@ -112,7 +112,11 @@ const Evaluation = ({route, navigation}) => {
               type: image.mime,
               name: image.path.split('/')[image.path.split('/').length - 1]
           }))
-          setPreImages(images)
+          if (images.length > 8) {
+            Alert.alert("Maximum 8 images are allowed")
+          } else {
+            setPreImages(images)
+          }
       })
   }
 
@@ -137,16 +141,21 @@ return (
       <Formik
           initialValues={{ }}
           onSubmit={async values => {
+              const formData = values
               const images = await upload(preImages)
-              values.Username = userInfo.username;
-              values.Images = images;
-              values.Added_Date = new Date().toISOString().slice(0, 10)
-              console.log(values)
+              formData.Username = userInfo.username;
+              formData.Images = images;
+              formData.Added_Date = new Date().toISOString().slice(0, 10)
+              
+              if (formData.Model === "Other") {
+                formData.Model = formData.otherModelName
+                delete formData["otherModelName"]
+              }
               const response = await fetch(`https://backend.carologyauctions.net/add/evaluation`, {
                   method: 'POST',
                   headers: {'Content-Type': 'application/json'},
                   body: JSON.stringify({
-                      values
+                      formData
                   })
               })
               const data = await response.json()
@@ -216,6 +225,11 @@ return (
                     enabled={true} 
                     onValueChange={(itemValue) => {
                       handleChange('Model')(itemValue);
+                      if (itemValue === "Other") {
+                        setOtherModelName(true)
+                      } else {
+                        setOtherModelName(false)
+                      }
                     }}
                     selectedValue={values.Model}
                     >
@@ -225,8 +239,13 @@ return (
                               <Picker.Item key={index+model} label={model} value={model} />
                           ))
                       )}  
+                      <Picker.Item label="Other" value="Other" />
                 </Picker>
               </View>
+
+              {
+                otherModelName ? <TextInput onChangeText={handleChange('otherModelName')} onBlur={handleBlur('otherModelName')} value={values.otherModelName} label='Other Model Name' style={styles.inputText} /> : <></>
+              }
 
               <Text style={styles.selectHeader}>Year</Text>
               <View style={styles.selectBox}>
@@ -248,28 +267,9 @@ return (
               {/* <TextInput onChangeText={handleChange('Year')} onBlur={handleBlur('Year')} value={values.Year} label='Year' style={styles.inputText} /> */}
               <TextInput onChangeText={handleChange('Meeting_Point')} onBlur={handleBlur('Meeting_Point')} value={values.Meeting_Point} label='Meeting Point' style={styles.inputText} />
 
-              <Text style={styles.selectHeader}>Engine Size</Text>
-              <View style={styles.selectBox}>
-                <Picker
-                    enabled={true} 
-                    onValueChange={handleChange('Engine')}
-                    selectedValue={values.Engine}
-                    >
-                    <Picker.Item label="Litres" value="0" />
-                    <Picker.Item label="1.0L" value="1.0L" />
-                    <Picker.Item label="1.2L" value="1.2L" />
-                    <Picker.Item label="1.5L" value="1.5L" />
-                    <Picker.Item label="1.8L" value="1.8L" />
-                    <Picker.Item label="2.0L" value="2.0L" />
-                    <Picker.Item label="2.5L" value="2.5L" />
-                    <Picker.Item label="3.0L" value="3.0L" />
-                    <Picker.Item label="3.5L" value="3.5L" />
-                    <Picker.Item label="4.0L" value="4.0L" />
-                    <Picker.Item label="> 4.5L" value="> 4.5L" />
-                </Picker>
-              </View>
+              
 
-              {/* <TextInput onChangeText={handleChange('Engine')} onBlur={handleBlur('Engine')} value={values.Engine} label='Engine' style={styles.inputText} /> */}
+              <TextInput onChangeText={handleChange('Engine')} onBlur={handleBlur('Engine')} value={values.Engine} label='Engine' style={styles.inputText} />
               <TextInput onChangeText={handleChange('Product_Description')} onBlur={handleBlur('Product_Description')} value={values.Product_Description} label='Product Description' style={styles.inputText} />
               <TextInput onChangeText={handleChange('Price')} onBlur={handleBlur('Price')} value={values.Price} label='Price' style={styles.inputText} />
 

@@ -59,7 +59,7 @@ const CustomNegotiationCard = ({data, navigation}) => {
             setNegotiation(data.response)
             const startingTime = moment(data.response?.Negotiation_Start_Date).format("YYYY-MM-DDTHH:mm:ss");
             const endTime = new Date(startingTime).getTime() + 60000 * parseInt(data.response?.Negotiation_Duration || 10);
-            setEndTime(endTime)
+            data.response?.Buy_Now_Price ? setEndTime(endTime) : setEndTime(0)
           })
     }
 

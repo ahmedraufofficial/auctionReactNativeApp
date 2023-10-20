@@ -11,6 +11,7 @@ import Theme from '../../components/Theme';
 import { AuthContext } from '../../Context/AuthContext';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import auctionCheck from '../../components/AuctionCheck.js/AuctionCheck';
 
 const good = ['Original Paint', 'Good']
 const average = ['Sticker or Foil', 'Repainted', 'Average']
@@ -42,6 +43,7 @@ const Vehicle = ({route, navigation}) => {
   const [layout4, setLayout4] = useState(null)
   const [layout5, setLayout5] = useState(null)
   const [layout6, setLayout6] = useState(null)
+  const [userAuction, setUserAuction] = useState('')
 
   const ref = React.useRef();
 
@@ -54,6 +56,7 @@ const Vehicle = ({route, navigation}) => {
   const [percentage, setPercentage] = useState(0);
 
   useEffect(() => {
+    auctionCheck(userInfo.username, setUserAuction)
     setTimeLeft(calcTimeLeft(end));
     console.log("Here")
     const timer = setInterval(() => {
@@ -62,6 +65,7 @@ const Vehicle = ({route, navigation}) => {
       setMinutes(Math.floor(targetLeft / 60000) % 60);
         setSeconds(Math.floor(targetLeft / 1000) % 60);
         setHours(Math.floor((targetLeft / (1000 * 60 * 60)) % 24));
+        console.log(targetLeft)
       if (targetLeft === 0) {
         //fetchNegotiations();
         clearInterval(timer);
@@ -141,6 +145,18 @@ const Vehicle = ({route, navigation}) => {
     ref.current.scrollTo({ y: scrollers[x], animated: true });
   }
 
+  const getAuctionAccess = async (username) => {
+    const sendReq = await fetch(`https://backend.carologyauctions.net/accounts/auction/request`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                username: username
+            })
+        })
+    console.log(sendReq)
+    setUserAuction('pending')
+  }
+
   return (
     <AnimatedScrollView ref={ref} style={styles.root} stickyHeaderIndices={[4]} showsVerticalScrollIndicator={true}>
         <Text>Vehicle</Text>
@@ -183,6 +199,27 @@ const Vehicle = ({route, navigation}) => {
               <Text style={{padding: 10, paddingLeft: 25}}>Minutes</Text>
               <Text style={{padding: 10, paddingLeft: 15}}>Seconds</Text>
             </View>
+            {userAuction === 'inactive' ? <View>
+                      <Text style={{color: 'red'}}>Your user '{userInfo.username}' currently doesnt have access to auctions.</Text>
+                      <TouchableOpacity
+                        style={styles.bidButton2}
+                        onPress={() => {
+                          getAuctionAccess(userInfo?.username);
+                        }}
+                      >
+                        <Text style={{ borderWidth: 1, borderColor: Theme.colors.table, borderRadius: 10, padding: 10 }}>
+                          Request Access?
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+              : 
+              userAuction === 'pending' ? <View><Text style={{color: 'orange'}}>
+                Your request is still pending! We will be contacting you shortly so kindly wait a little longer. Thanks!
+              </Text>
+              </View>
+              :
+            <>
+
             <View style={{width: '100%', paddingVertical: 10, flexDirection: 'row', justifyContent: 'space-between'}}> 
             <TouchableOpacity style={styles.bidButton} onPress={() => {
               !(auction?.Bids.length > 0) ? 
@@ -358,6 +395,7 @@ const Vehicle = ({route, navigation}) => {
                 style={styles.bidText}
               />
             </View>
+            </>}
           </> :
             <Text style={styles.timerText}>Auction Completed</Text>
           }
@@ -615,6 +653,16 @@ const styles = StyleSheet.create({
       padding: 10,
       borderRadius: 10,
       marginTop: 10
+    },
+    bidButton2: { 
+      borderWidth: 1, 
+      maxHeight: 50, 
+      borderColor: Theme.colors.primary, 
+      width: 140,
+      backgroundColor: Theme.colors.primary, 
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center"
     }
   })
   

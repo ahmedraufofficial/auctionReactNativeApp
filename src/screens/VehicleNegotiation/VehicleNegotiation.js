@@ -10,6 +10,7 @@ import NegotiationTimer from '../../components/NegotiationTimer';
 import { AuthContext } from '../../Context/AuthContext';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import auctionCheck from '../../components/AuctionCheck.js/AuctionCheck';
 
 const good = ['Original Paint', 'Good']
 const average = ['Sticker or Foil', 'Repainted', 'Average']
@@ -39,6 +40,20 @@ const VehicleNegotiation = ({route, navigation}) => {
   const [layout4, setLayout4] = useState(null)
   const [layout5, setLayout5] = useState(null)
   const [layout6, setLayout6] = useState(null)
+  const [userAuction, setUserAuction] = useState('')
+
+  const getAuctionAccess = async (username) => {
+    const sendReq = await fetch(`https://backend.carologyauctions.net/accounts/auction/request`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                username: username
+            })
+        })
+    console.log(sendReq)
+    setUserAuction('pending')
+  }
+
 
   const [end, setEndTime] = useState(0);
   const [timeLeft, setTimeLeft] = useState(() => calcTimeLeft(end));
@@ -61,6 +76,7 @@ const VehicleNegotiation = ({route, navigation}) => {
   }
 
   useEffect(() => {
+    auctionCheck(userInfo.username, setUserAuction)
     setTimeLeft(calcTimeLeft(end));
     const timer = setInterval(() => {
       const targetLeft = calcTimeLeft(end);
@@ -87,7 +103,7 @@ const VehicleNegotiation = ({route, navigation}) => {
       setNegotiation(data.response)
       const startingTime = moment(data.response?.Negotiation_Start_Date).format("YYYY-MM-DDTHH:mm:ss");
       const endTime = new Date(startingTime).getTime() + 60000 * parseInt(data.response?.Negotiation_Duration || 10);
-      setEndTime(endTime)
+      data.response?.Buy_Now_Price ? setEndTime(endTime) : setEndTime(0)
     })
   }
 
@@ -233,6 +249,26 @@ const VehicleNegotiation = ({route, navigation}) => {
                   <Text style={{padding: 10, paddingLeft: 25}}>Minutes</Text>
                   <Text style={{padding: 10, paddingLeft: 15}}>Seconds</Text>
                 </View>
+
+                {userAuction === 'inactive' ? <View>
+                      <Text style={{color: 'red'}}>Your user '{userInfo.username}' currently doesnt have access to auctions.</Text>
+                      <TouchableOpacity
+                        style={styles.bidButton2}
+                        onPress={() => {
+                          getAuctionAccess(userInfo?.username);
+                        }}
+                      >
+                        <Text style={{ borderWidth: 1, borderColor: Theme.colors.table, borderRadius: 10, padding: 10 }}>
+                          Request Access?
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                    : 
+                    userAuction === 'pending' ? <View>
+                      <Text style={{color: 'orange'}}>Your request is still pending! We will be contacting you shortly so kindly wait a little longer. Thanks!</Text>
+                    </View>
+                    :
+                  <>
                 <View style={{width: '100%', paddingVertical: 10, flexDirection: 'row', justifyContent: 'space-between'}}>
                   <TouchableOpacity style={styles.bidButton} onPress={() => {
                     negotiation?.Buy_Now_Price === undefined /* || !(parseInt(bid) > 0) */ ? 
@@ -366,6 +402,7 @@ const VehicleNegotiation = ({route, navigation}) => {
                     {`${negotiation?.Buy_Now_Price ? negotiation?.Buy_Now_Price : 'Negotiating'} ${negotiation?.Buy_Now_Price? negotiation?.Currency : null}`}
                   </Text>
                 </View>
+                </>}
               </> }
             </View>
         </View>
@@ -605,6 +642,16 @@ const styles = StyleSheet.create({
     bidButton: { 
       borderWidth: 1, 
       height: 50, 
+      borderColor: Theme.colors.primary, 
+      width: 140,
+      backgroundColor: Theme.colors.primary, 
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center"
+    },
+    bidButton2: { 
+      borderWidth: 1, 
+      maxHeight: 50, 
       borderColor: Theme.colors.primary, 
       width: 140,
       backgroundColor: Theme.colors.primary, 
